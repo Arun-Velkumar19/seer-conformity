@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+.npm/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials*.json
+
+# Build output
+dist/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# Browser extension packaging
+*.crx
+*.xpi
+web-ext-artifacts/
+
+# Test and browser-automation output
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+*.trace.zip
+screenshots/
+videos/
+
+# Local research runs and generated artifacts
+runs/
+results/raw/
+artifacts/
+*.log
+logs/
+
+# Temp and caches
+tmp/
+temp/
+.cache/
+.turbo/
+.eslintcache
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
