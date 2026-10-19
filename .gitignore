@@ -6,6 +6,17 @@ node_modules/
 !.yarn/plugins
 .npm/
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.ipynb_checkpoints/
+
 # Environment and secrets
 .env
 .env.*
@@ -29,6 +40,8 @@ web-ext-artifacts/
 
 # Test and browser-automation output
 coverage/
+.coverage
+htmlcov/
 .nyc_output/
 test-results/
 playwright-report/
@@ -39,7 +52,9 @@ screenshots/
 videos/
 
 # Local research runs and generated artifacts
-runs/
+# (runs/summary.csv is intended to be committed per SPEC.md)
+runs/*
+!runs/summary.csv
 results/raw/
 artifacts/
 *.log
