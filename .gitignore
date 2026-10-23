@@ -33,30 +33,16 @@ out/
 .next/
 *.tsbuildinfo
 
-# Browser extension packaging
-*.crx
-*.xpi
-web-ext-artifacts/
-
-# Test and browser-automation output
+# Test output
 coverage/
 .coverage
 htmlcov/
-.nyc_output/
-test-results/
-playwright-report/
-blob-report/
-playwright/.cache/
-*.trace.zip
-screenshots/
-videos/
 
-# Local research runs and generated artifacts
-# (runs/summary.csv is intended to be committed per SPEC.md)
+# Experiment runs: JSONL transcripts stay local; summary.csv and the
+# folder placeholder are committed (see SPEC.md, Logging)
 runs/*
 !runs/summary.csv
-results/raw/
-artifacts/
+!runs/README.md
 *.log
 logs/
 
