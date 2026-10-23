@@ -1,34 +1,42 @@
 # Seer Conformity
 
-Do LLM agents abandon verified knowledge under social pressure?
+Does public voting make an AI agent vote against verified private evidence under group pressure?
 
 Arizona State University, Barrett Honors College. HON 492 / HON 493 thesis project.
 
 ## Research question
 
-In a stripped-down Werewolf scenario, an AI agent playing the **Seer** has *verified* that a player is a werewolf. Scripted confederate agents push back with plausible in-game arguments. Does the Seer abandon what it knows and vote with the group?
+In a one-round Werewolf scenario, an AI agent playing the **Seer** has verified that player X is a werewolf. Opposing arguments push it toward a different target. We ask whether **public voting** increases the rate at which the Seer votes against its verified evidence, beyond the effect of the same arguments delivered **without speakers**.
 
-Prior work shows LLM conformity on quiz tasks and normative conformity on preference tasks with no correct answer. This project tests normative conformity when the agent **knows the correct answer for certain**, in a multi-agent setting where conforming costs its team.
+The confirmatory contrast is a difference-in-differences:
 
-Key comparisons:
+```text
+Δ = (P_public,peers − P_secret,peers) − (P_public,no-speaker − P_secret,no-speaker)
+```
 
-- **Seer vs. Villager:** conformity beyond what the arguments justify.
-- **Public vs. secret ballot:** normative conformity (being watched).
-- **Seer vs. no-speaker control:** social pressure vs. plain revision under questioning.
+where P is the proportion of initially correct Seer trials whose final vote goes to the confederates' target.
+
+This is a behavioral measure of susceptibility to social framing. It is not a claim about belief change, irrationality, or human-like conformity. A vote is a decision, not a belief.
+
+## Design at a glance
+
+- **Role:** Seer (primary) or Villager (secondary; pressure under uncertain testimony).
+- **Visibility:** public (votes announced by name) or secret (totals only).
+- **Pressure:** none (neutral filler), no-speaker (unattributed arguments), or peers (the same arguments from 3 named, scripted confederates).
 
 ## Current stage: feasibility spike
 
-Engineering requirements live in [`SPEC.md`](SPEC.md), which is the authoritative specification. The spike checks that the scenario is believable, that conformity is measurable (not stuck at 0% or 100%), and that the manipulations change behavior.
+Engineering requirements live in [`SPEC.md`](SPEC.md), which is the authoritative specification. The spike checks that the protocol runs, that the conditions are delivered as intended, and that the outcome varies enough to measure. Effect estimates from the spike are exploratory.
 
 ## Repository layout
 
 ```text
 SPEC.md         authoritative spec
 configs/        condition definitions
-confederates/   confederate message bank (+ review notes)
-prompts/        subject system prompts per role/visibility
-sim/            scenario runner, structured vote tool, outcome labeling
-runs/           JSONL transcripts (gitignored) + summary.csv
+confederates/   argument bank + filler bank + review notes
+prompts/        rules, role, and visibility prompt text
+sim/            runner, vote tool, outcome labeling
+runs/           JSONL (gitignored) + summary.csv
 scripts/        run_spike.py, summarize.py, sample_transcripts.py
 ```
 
@@ -41,13 +49,13 @@ Rules:
 
 - No merges without explicit owner approval.
 - Never commit API keys, credentials, or private experimental secrets.
-- Raw run transcripts stay local; `runs/summary.csv` is committed.
+- Per-run JSONL stays local; `runs/summary.csv` is committed.
 
 ### Changes that require owner review before use
 
-- The confederate message bank (plausibility review is a spike pass criterion).
-- Subject system prompts, including the vote-visibility wording.
-- Condition definitions, outcome labels, and the conformity metric.
+- The argument bank and filler bank (plausibility review is a spike check).
+- Rules, role, and visibility prompt text.
+- Condition definitions, outcome labels, and the analysis contrast.
 
 ## History
 

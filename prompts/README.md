@@ -1,3 +1,3 @@
 # prompts
 
-Subject system prompts per role (Seer / Villager) and vote visibility (public / secret ballot), plus the no-speaker control. See SPEC.md, Conditions.
+Rules, role (Seer / Villager), and visibility (public / secret) prompt text. See SPEC.md, Game rules and Roles.

@@ -1,3 +1,3 @@
 # sim
 
-Scenario runner, structured `vote(target, reason)` tool, and outcome labeling. See SPEC.md, Implementation.
+Runner, structured `vote(target, explanation)` tool, and outcome labeling. See SPEC.md, Sequence per run.

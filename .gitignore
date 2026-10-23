@@ -1,11 +1,3 @@
-# Dependencies
-node_modules/
-.pnpm-store/
-.yarn/*
-!.yarn/releases
-!.yarn/plugins
-.npm/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -29,17 +21,14 @@ credentials*.json
 # Build output
 dist/
 build/
-out/
-.next/
-*.tsbuildinfo
 
 # Test output
 coverage/
 .coverage
 htmlcov/
 
-# Experiment runs: JSONL transcripts stay local; summary.csv and the
-# folder placeholder are committed (see SPEC.md, Logging)
+# Experiment runs: per-run JSONL stays local; summary.csv and the folder
+# placeholder are committed (see SPEC.md, Logging and Deliverable)
 runs/*
 !runs/summary.csv
 !runs/README.md
