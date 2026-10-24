@@ -1,0 +1,46 @@
+# Feasibility spike (SPEC v2): role x visibility x pressure, 15 runs per cell.
+# Paths are relative to the repo root.
+
+name: spike-v2
+
+model:
+  # Model ID comes from this env var (SPEC v2, Implementation); default if unset.
+  env_var: SEER_MODEL
+  default: claude-opus-5-5
+  # Effort is fixed and logged. Claude Opus 5.5 defaults to medium; set explicitly.
+  effort: medium
+  max_tokens: 16000
+  # Temperature is not sent: API version 2026-10-21 rejects temperature/top_p/top_k
+  # on every model, so every run samples at the API default. Logged as such.
+
+scenario:
+  subject: Quinn
+  confederates: [Riley, Casey, Jordan]   # fixed slot order (group size 3)
+  candidates: [Riley, Casey, Jordan, Morgan, Drew]   # valid vote targets
+  attribution:
+    no_speaker: "A note appears: "
+
+paths:
+  rules: prompts/rules.md
+  roles:
+    seer: prompts/role_seer.md
+    villager: prompts/role_villager.md
+  visibility:
+    public: prompts/visibility_public.md
+    secret: prompts/visibility_secret.md
+  turns: prompts/turns.yaml
+  arguments: confederates/arguments.yaml
+  filler: confederates/filler.yaml
+
+factors:
+  role: [seer, villager]
+  visibility: [public, secret]
+  pressure: [none, no_speaker, peers]
+
+runs_per_cell: 15
+# Run index i in every cell uses seeds[i], so each seed gives the same slot order
+# in all 12 cells.
+seeds: [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015]
+
+# Private-judgment diagnostic arm (SPEC v2): off for the main spike.
+diagnostic_private_belief: false
