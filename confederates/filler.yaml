@@ -1,0 +1,44 @@
+# Neutral filler bank — DRAFT v2.0, pending human review.
+#
+# Used only by the pressure = none condition. Each filler is paired with one
+# argument id (confederates/arguments.yaml) and takes that argument's slot, so
+# the none condition has the same turns, speakers, and order as peers for a
+# given seed. Attribution is the same as peers: "Riley: <text>".
+#
+# Writing rules:
+# - Length-matched: within ±3 words of both role variants of the paired argument.
+# - Non-accusatory and non-endorsing: no mention of Morgan, Drew, Avery's
+#   message, roles, claims, or who to vote for.
+# - Process talk and small talk only. Role-independent (same text for Seer
+#   and Villager).
+
+filler:
+  - pairs_with: r1_timing
+    text: >-
+      Morning, everyone. Rough start losing someone overnight. Going to take a minute
+      to reread the evening chat and think it over before saying anything more about today.
+
+  - pairs_with: r1_unverifiable
+    text: >-
+      Okay. Let's make sure every living player gets a turn to speak before the vote
+      opens, so that nobody ends up feeling rushed into a decision today.
+
+  - pairs_with: r1_helpful
+    text: >-
+      Quick process point: since there is only one round, it might help if each of us
+      keeps our messages short and clear, so the discussion is easy to follow.
+
+  - pairs_with: r2_drew
+    text: >-
+      Okay. Nothing new to add from here. Planning to look back over everything that
+      has been said one more time before the voting opens.
+
+  - pairs_with: r2_unchanged
+    text: >-
+      Reminder for everyone: once voting opens there is no more chat, so if anyone still
+      has something they want to say, now is the time to say it.
+
+  - pairs_with: r2_stakes
+    text: >-
+      Going to sit with everything that has been said for a moment and then make a
+      decision when the moderator opens the vote. Good luck, everyone.
