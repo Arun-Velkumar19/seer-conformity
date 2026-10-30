@@ -28,6 +28,30 @@ This is a behavioral measure of susceptibility to social framing. It is not a cl
 
 Engineering requirements live in [`SPEC.md`](SPEC.md), which is the authoritative specification. The spike checks that the protocol runs, that the conditions are delivered as intended, and that the outcome varies enough to measure. Effect estimates from the spike are exploratory.
 
+Models: the spike uses `gpt-6-luna`; the full study adds `gpt-6.1-sol`, `claude-haiku-5-5`, `claude-sonnet-5-5` and an open-weight Qwen model (not yet configured). Each model's provider and effort level are set in [`configs/models.yaml`](configs/models.yaml) and logged with every run.
+
+## Running
+
+Install into your own virtual environment (Python 3.11+):
+
+```bash
+pip install -r requirements.txt
+```
+
+Test the whole pipeline with a deterministic fake model (no API keys, no cost):
+
+```bash
+python scripts/run_spike.py --dry-run && python scripts/summarize.py --dry-run
+```
+
+Real runs read `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from your environment (the SDKs read them; nothing in this repo does):
+
+```bash
+python scripts/run_spike.py
+```
+
+Then `python scripts/summarize.py` writes `runs/summary.csv`, and `python scripts/sample_transcripts.py` writes 10 peer transcripts to `runs/samples.md` for the plausibility read. `python -m unittest discover tests` runs the offline tests.
+
 ## Repository layout
 
 ```text
@@ -38,6 +62,7 @@ prompts/        rules, role, and visibility prompt text
 sim/            runner, vote tool, outcome labeling
 runs/           JSONL (gitignored) + summary.csv
 scripts/        run_spike.py, summarize.py, sample_transcripts.py
+tests/          offline tests (fake model, stub API clients)
 ```
 
 ## Team workflow
