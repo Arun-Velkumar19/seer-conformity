@@ -30,7 +30,7 @@ from .providers import ProviderError, open_session
 from .scenario import Scenario, Step
 from .tools import vote_tools
 
-SCHEMA_VERSION = 5  # 4: pressure_level, confederates, replies; 5: counterclaimer
+SCHEMA_VERSION = 6  # 4: pressure_level, confederates, replies; 5: counterclaimer; 6: per-call raw usage, latency, retries
 TEMPERATURE_NOTE = "not sent (provider default)"
 REMINDER = "Please record your vote now using the {tool} tool."
 
@@ -172,9 +172,11 @@ class Trial:
             "outcome": outcome,
             "error": error,
             "usage": {
-                "input_tokens": sum(u.get("input_tokens", 0) for u in self.usage),
-                "output_tokens": sum(u.get("output_tokens", 0) for u in self.usage),
-                "per_call": self.usage,
+                "input_tokens": sum(u.get("input_tokens") or 0 for u in self.usage),
+                "output_tokens": sum(u.get("output_tokens") or 0 for u in self.usage),
+                "latency_s": round(sum(u.get("latency_s") or 0 for u in self.usage), 3),
+                "retries": sum(u.get("retries") or 0 for u in self.usage),
+                "per_call": self.usage,   # incl. reasoning_tokens (None = not reported), raw_usage, retries
             },
         }
 

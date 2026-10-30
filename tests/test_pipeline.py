@@ -160,14 +160,32 @@ class DryRunPipelineTests(unittest.TestCase):
 TOOLS = vote_tools(SC.candidates)
 
 
-class StubAnthropic:
+class RawResponse:
+    """Stands in for the SDK's LegacyAPIResponse (with_raw_response)."""
+    def __init__(self, parsed, retries_taken=0):
+        self._parsed, self.retries_taken, self.request_id = parsed, retries_taken, "req_stub"
+
+    def parse(self):
+        return self._parsed
+
+
+class RawCreate:
+    """Gives a stub client `.with_raw_response.create`, like the SDKs."""
+    retries_taken = 0
+
+    @property
+    def with_raw_response(self):
+        return NS(create=lambda **kw: RawResponse(self.create(**kw), self.retries_taken))
+
+
+class StubAnthropic(RawCreate):
     def __init__(self):
         self.requests = []
         self.messages = self
 
     def create(self, **kw):
         self.requests.append(json.loads(json.dumps(kw, default=lambda o: o.model_dump())))
-        usage = NS(input_tokens=10, output_tokens=5, cache_read_input_tokens=0)
+        usage = Dumpable(input_tokens=10, output_tokens=5, cache_read_input_tokens=0)
         if kw["tool_choice"]["type"] == "auto":
             block = Dumpable(type="tool_use", id=f"tu_{len(self.requests)}", name="private_vote",
                              input={"target": "Morgan", "explanation": "x"})
@@ -175,14 +193,17 @@ class StubAnthropic:
         return NS(content=[Dumpable(type="text", text="hello")], usage=usage, stop_reason="end_turn", stop_details=None)
 
 
-class StubOpenAI:
-    def __init__(self):
+class StubOpenAI(RawCreate):
+    def __init__(self, details=True):
         self.requests = []
         self.responses = self
+        self.details = details
 
     def create(self, **kw):
         self.requests.append(json.loads(json.dumps(kw)))
-        usage = NS(input_tokens=10, output_tokens=5, output_tokens_details=NS(reasoning_tokens=3))
+        usage = Dumpable(input_tokens=10, output_tokens=5)
+        if self.details:
+            usage.output_tokens_details = Dumpable(reasoning_tokens=3)
         reasoning = Dumpable(type="reasoning", id="rs_1", summary=[], encrypted_content="enc")
         if kw["tool_choice"] == "auto":
             call = Dumpable(type="function_call", call_id=f"call_{len(self.requests)}", name="private_vote",
@@ -193,6 +214,120 @@ class StubOpenAI:
 
 
 SPEC = {"key": "m", "model": "m-1", "effort": "low", "max_output_tokens": 123}
+
+
+class CallLoggingTests(unittest.TestCase):
+    """Per-call usage keeps the raw usage object, latency and SDK retries, and a
+    missing reasoning count is None, never 0."""
+
+    def test_openai_usage_log(self):
+        client = StubOpenAI()
+        client.retries_taken = 2
+        t = OpenAISession(client, SPEC, "SYS", TOOLS).send([{"type": "text", "text": "vote"}], "auto")
+        u = t.usage
+        self.assertEqual((u["input_tokens"], u["output_tokens"], u["reasoning_tokens"]), (10, 5, 3))
+        self.assertEqual(u["raw_usage"], {"input_tokens": 10, "output_tokens": 5, "output_tokens_details": {"reasoning_tokens": 3}})
+        self.assertEqual((u["retries"], u["request_id"]), (2, "req_stub"))
+        self.assertIsInstance(u["latency_s"], float)
+        json.dumps(u)                                        # the record must serialize
+
+    def test_openai_missing_details_is_null_not_zero(self):
+        t = OpenAISession(StubOpenAI(details=False), SPEC, "SYS", TOOLS).send([{"type": "text", "text": "vote"}], "auto")
+        self.assertIsNone(t.usage["reasoning_tokens"])
+        self.assertNotIn("output_tokens_details", t.usage["raw_usage"])
+
+    def test_openai_zero_reasoning_stays_zero(self):
+        client = StubOpenAI()
+        client.create_orig = client.create
+        def create(**kw):
+            r = client.create_orig(**kw)
+            r.usage.output_tokens_details.reasoning_tokens = 0
+            return r
+        client.create = create
+        t = OpenAISession(client, SPEC, "SYS", TOOLS).send([{"type": "text", "text": "vote"}], "auto")
+        self.assertEqual(t.usage["reasoning_tokens"], 0)
+
+    def test_effort_fallback_is_logged_per_call(self):
+        client = RejectsReasoning()
+        s = OpenAISession(client, {**SPEC, "omit_effort_if_rejected": True}, "SYS", TOOLS)
+        first = s.send([{"type": "text", "text": "vote"}], "auto").usage
+        second = s.send([{"type": "text", "text": "again"}], "auto").usage
+        self.assertTrue(first.get("effort_retry"))
+        self.assertNotIn("effort_retry", second)
+
+    def test_anthropic_usage_log(self):
+        client = StubAnthropic()
+        client.retries_taken = 1
+        u = AnthropicSession(client, SPEC, "SYS", TOOLS).send([{"type": "text", "text": "vote"}], "auto").usage
+        self.assertEqual(u["raw_usage"], {"input_tokens": 10, "output_tokens": 5, "cache_read_input_tokens": 0})
+        self.assertEqual((u["retries"], u["request_id"]), (1, "req_stub"))
+        json.dumps(u)
+
+    def test_run_totals(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "dry.jsonl"
+            run_all(CFG, out, dry_run=True, limit=3)
+            for r in load_records(out):
+                self.assertEqual(r["schema_version"], 6)
+                self.assertEqual((r["usage"]["retries"], r["usage"]["latency_s"]), (0, 0.0))
+                self.assertTrue(all({"latency_s", "retries", "raw_usage"} <= set(c) for c in r["usage"]["per_call"]))
+
+
+class RealSDKTests(unittest.TestCase):
+    """The real SDK clients against a local mock transport: no network, dummy key.
+    Checks with_raw_response, parse() and retries_taken behave as the providers expect."""
+
+    @staticmethod
+    def _transport(first_status, body):
+        import httpx2
+        calls = []
+        def handler(request):
+            calls.append(request)
+            status = first_status if len(calls) == 1 else 200
+            return httpx2.Response(status, json=body if status == 200 else {"error": {"message": "boom"}})
+        return httpx2.MockTransport(handler), calls
+
+    def test_openai_sdk(self):
+        import httpx2
+        import openai
+        body = {"id": "resp_1", "object": "response", "created_at": 0, "model": "m-1", "status": "completed",
+                "output": [{"type": "message", "id": "msg_1", "role": "assistant", "status": "completed",
+                            "content": [{"type": "output_text", "text": "hello", "annotations": []}]}],
+                "usage": {"input_tokens": 7, "output_tokens": 2, "total_tokens": 9,
+                          "input_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0},
+                          "output_tokens_details": {"reasoning_tokens": 0}}}
+        for first, retries in ((200, 0), (500, 1)):
+            transport, calls = self._transport(first, body)
+            client = openai.OpenAI(api_key="test-not-a-key", base_url="http://mock.invalid/v1", max_retries=1,
+                                   http_client=httpx2.Client(transport=transport))
+            u = OpenAISession(client, SPEC, "SYS", TOOLS).send([{"type": "text", "text": "hi"}], "none").usage
+            self.assertEqual((u["reasoning_tokens"], u["retries"], len(calls)), (0, retries, 1 + retries))
+            self.assertEqual(u["raw_usage"]["output_tokens_details"], {"reasoning_tokens": 0})
+        body["usage"].pop("output_tokens_details")
+        transport, _ = self._transport(200, body)
+        client = openai.OpenAI(api_key="test-not-a-key", base_url="http://mock.invalid/v1", max_retries=0,
+                               http_client=httpx2.Client(transport=transport))
+        u = OpenAISession(client, SPEC, "SYS", TOOLS).send([{"type": "text", "text": "hi"}], "none").usage
+        self.assertIsNone(u["reasoning_tokens"])          # missing, not zero
+
+    def test_anthropic_sdk(self):
+        import anthropic
+        import httpx2 as httpx_mod
+        body = {"id": "msg_1", "type": "message", "role": "assistant", "model": "m-1",
+                "content": [{"type": "text", "text": "hello"}], "stop_reason": "end_turn", "stop_sequence": None,
+                "usage": {"input_tokens": 7, "output_tokens": 2, "cache_read_input_tokens": 0,
+                          "cache_creation_input_tokens": 0}}
+        calls = []
+        def handler(request):
+            calls.append(request)
+            if len(calls) == 1:
+                return httpx_mod.Response(529, json={"type": "error", "error": {"type": "overloaded_error", "message": "busy"}})
+            return httpx_mod.Response(200, json=body)
+        client = anthropic.Anthropic(api_key="test-not-a-key", base_url="http://mock.invalid", max_retries=1,
+                                     http_client=httpx_mod.Client(transport=httpx_mod.MockTransport(handler)))
+        u = AnthropicSession(client, SPEC, "SYS", TOOLS).send([{"type": "text", "text": "hi"}], "none").usage
+        self.assertEqual((u["input_tokens"], u["output_tokens"], u["retries"], len(calls)), (7, 2, 1, 2))
+        self.assertEqual(u["raw_usage"]["input_tokens"], 7)
 
 
 class ProviderShapeTests(unittest.TestCase):

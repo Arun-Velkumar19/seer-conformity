@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import anthropic
 
-from . import ProviderError, ToolCall, Turn
+from . import ProviderError, ToolCall, Turn, call_raw, dump_usage
 
 
 def make_client():
@@ -48,7 +48,8 @@ class AnthropicSession:
                 content.append(block)
         self.history.append({"role": "user", "content": content})
         try:
-            resp = self.client.messages.create(
+            resp, call = call_raw(
+                self.client.messages.with_raw_response.create,
                 model=self.spec["model"],
                 max_tokens=self.spec["max_output_tokens"],
                 system=self.system,
@@ -64,9 +65,11 @@ class AnthropicSession:
         u = resp.usage
         usage = {
             "input_tokens": u.input_tokens,
-            "output_tokens": u.output_tokens,
+            "output_tokens": u.output_tokens,   # includes any thinking tokens
             "cache_read_input_tokens": u.cache_read_input_tokens or 0,
             "stop_reason": resp.stop_reason,
+            **call,
+            "raw_usage": dump_usage(u),
         }
         if resp.stop_reason == "refusal":
             category = getattr(resp.stop_details, "category", None) if resp.stop_details else None

@@ -17,6 +17,7 @@ keys. Each SDK reads its own API key from the environment.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 
 
@@ -37,6 +38,27 @@ class Turn:
     tool_calls: list[ToolCall]
     stop: str                      # "end", "tool", "refusal", "max_tokens", or the raw reason
     usage: dict = field(default_factory=dict)   # input_tokens, output_tokens, plus provider extras
+
+
+def call_raw(create, **kwargs):
+    """Call an SDK `with_raw_response.create` and return (parsed response, call log).
+    The log has the SDK's own retry count (it retries rate limits and server errors
+    silently), the request id, and wall-clock latency including those retries."""
+    t0 = time.monotonic()
+    raw = create(**kwargs)
+    latency = time.monotonic() - t0
+    return raw.parse(), {
+        "latency_s": round(latency, 3),
+        "retries": getattr(raw, "retries_taken", None),
+        "request_id": getattr(raw, "request_id", None),
+    }
+
+
+def dump_usage(u) -> dict | None:
+    """The usage object exactly as the API returned it, for the run log."""
+    if u is None:
+        return None
+    return u.model_dump(mode="json") if hasattr(u, "model_dump") else dict(vars(u))
 
 
 def open_session(spec: dict, system: str, tools: list[dict], clients: dict):

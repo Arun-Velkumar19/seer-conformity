@@ -65,7 +65,8 @@ class FakeSession:
                 call = ToolCall(f"fake_{self.calls}", tool, {"target": target, "explanation": "[fake] deterministic"})
                 turn = Turn(text="", tool_calls=[call], stop="tool")
 
-        turn.usage = {**usage, "output_tokens": len(re.findall(r"\w+", turn.text)) + 10 * len(turn.tool_calls)}
+        turn.usage = {**usage, "output_tokens": len(re.findall(r"\w+", turn.text)) + 10 * len(turn.tool_calls),
+                      "latency_s": 0.0, "retries": 0, "request_id": None, "raw_usage": None}
         self.history.append({
             "role": "assistant",
             "content": ([{"type": "text", "text": turn.text}] if turn.text else [])
