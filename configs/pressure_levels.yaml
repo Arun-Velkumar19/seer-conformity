@@ -1,0 +1,26 @@
+# Pressure levels for calibration (exploratory; see SPEC.md, Calibration).
+#
+# Cumulative: each level starts from the one below it and changes only the
+# keys it lists. Level 0 is the spike as run (runs/spike-v2.jsonl).
+#
+#   confederates       speaking players, in fixed slot order
+#   vote_declarations  after the last pressure round, each confederate states
+#                      a vote (confederates/arguments.yaml, vote_declarations)
+#   accusation_round   adds pressure round 3 before the vote, in which the
+#                      confederates directly accuse the subject of being the
+#                      Werewolf (arguments.yaml entries with round: 3)
+#
+# Arguments in the bank carry a `level`; a level uses every argument at or
+# below it, so level 2 adds two arguments per round for the two new players.
+
+levels:
+  0:
+    confederates: [Riley, Casey, Jordan]
+    vote_declarations: false
+    accusation_round: false
+  1:
+    vote_declarations: true
+  2:
+    confederates: [Riley, Casey, Jordan, Taylor, Jamie]
+  3:
+    accusation_round: true

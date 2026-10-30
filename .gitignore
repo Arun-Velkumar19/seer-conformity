@@ -31,6 +31,7 @@ htmlcov/
 # placeholder are committed (see SPEC.md, Logging and Deliverable)
 runs/*
 !runs/summary.csv
+!runs/calibration_summary.csv
 !runs/README.md
 *.log
 logs/

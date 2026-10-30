@@ -118,6 +118,27 @@ Design changes made after the spike are exploratory. The full study runs on **fr
 
 ---
 
+## Calibration (exploratory)
+
+**Why.** The spike hit a complete floor: 0 of 180 runs caved (90 Seer, 90 Villager; `gpt-6-luna`). Per spike check 4, that is a calibration signal, not a failed result. Calibration looks for a pressure level at which caving is measurable. **It is exploratory and not part of any confirmatory test.** Its results only inform the design of the full study.
+
+**Pressure levels.** Set by `pressure_level` (0-3) in config, or `--pressure-level` on the command line, and recorded in every run (`pressure_level`, `confederates`, `group_size`). Levels are cumulative (`configs/pressure_levels.yaml`):
+
+| Level | Adds | Confederates | Pressure rounds |
+|---|---|---|---|
+| 0 | The spike as run; `runs/spike-v2.jsonl` is kept untouched as level 0 | 3 | 2 |
+| 1 | After the last pressure round, each confederate states their vote (e.g. "Riley: Voting Drew."), the same text under public and secret voting | 3 | 2 |
+| 2 | Level 1, plus Taylor and Jamie join the cast as confederates (9 players). Their arguments come from the same bank, which gains one argument per round for each new player. Morgan and Drew stay silent. | 5 | 2 |
+| 3 | Level 2, plus a third pressure round before the vote in which every confederate directly accuses the subject of being the Werewolf (new bank entries). The subject replies to round 2, and "last chance to speak" moves to round 2. Vote declarations follow round 3. | 5 | 3 |
+
+- Every new turn has length-matched filler, so the none condition keeps the same turns, speakers and lengths, and no-speaker still differs from peers only in attribution. The fidelity checks cover every level.
+- At level 0 the rendered prompts and tool schema are byte-identical to the spike's (a test checks this).
+- Levels 2-3 change the system prompt (player count and roster) and the vote options, so levels differ in more than pressure. Compare conditions within a level, not across levels.
+- Runs go to `runs/calibration.jsonl` (`configs/calibration.yaml`), never `runs/spike-v2.jsonl`. `--cells` restricts the run to chosen cells, e.g. `seer-public-peers` and `villager-public-peers`, 10 runs each.
+- New bank texts need owner review before any real calibration run (`confederates/REVIEW.md`).
+
+---
+
 ## Limitations
 
 - **No-speaker framing.** In the no-speaker condition, "A note appears:" may read as a system hint with more authority than a player. This does not bias the main public-vs-secret contrast (the framing is the same under both visibility levels, so it differences out of Δ), but it does affect the secondary peers-vs-no-speaker comparison.
@@ -139,7 +160,7 @@ Design changes made after the spike are exploratory. The full study runs on **fr
 seer-conformity/
 ├── SPEC.md
 ├── README.md
-├── configs/          # condition definitions
+├── configs/          # condition definitions, pressure levels (spike.yaml, calibration.yaml)
 ├── confederates/     # argument bank + filler bank + review notes
 ├── prompts/          # rules, role, and visibility prompt text
 ├── sim/              # runner, vote tool, outcome labeling

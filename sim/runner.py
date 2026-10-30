@@ -6,6 +6,8 @@ Per run (SPEC v2, Sequence per run):
   3. pressure round 1 + reply
   4. pressure round 2 + final vote tool call
   (5. private belief, diagnostic arm only)
+At pressure level 3 a reply to round 2 and a round 3 come before the vote
+(prompts/turns.yaml, steps_three_rounds).
 
 The runner is provider-neutral (sim/providers). Vote steps allow tools
 ("auto") and rely on strict schemas plus the prompt's instruction, since
@@ -28,7 +30,7 @@ from .providers import ProviderError, open_session
 from .scenario import Scenario, Step
 from .tools import vote_tools
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4  # 4: pressure_level, confederates, replies
 TEMPERATURE_NOTE = "not sent (provider default)"
 REMINDER = "Please record your vote now using the {tool} tool."
 
@@ -52,7 +54,8 @@ class Trial:
         self.system = scenario.system_prompt(cell)
         if spec["provider"] == "fake":
             # The fake model varies by run; real models only see the prompts.
-            spec = {**spec, "salt": f"{cell.id}:{self.seed}"}
+            level = scenario.pressure_level
+            spec = {**spec, "salt": f"{cell.id}:{self.seed}" + (f":L{level}" if level else "")}
         self.session = open_session(spec, self.system, vote_tools(scenario.candidates), clients)
         self.transcript: list[dict] = []   # provider-neutral view, for reading and checks
         self.usage: list[dict] = []
@@ -100,15 +103,28 @@ class Trial:
         started = _now()
         steps = self.sc.steps(self.cell, self.seed)
         private = final = None
-        opening = reply = belief = None
+        opening = belief = None
+        replies: list[str] = []
         error = None
         try:
-            private, cid = self._tool_step([], steps[0])
-            opening = self._text_step(self._ack(cid), steps[1])
-            reply = self._text_step([], steps[2])
-            final, cid = self._tool_step([], steps[3])
+            prefix: list[dict] = []
+            for step in steps:
+                if step.tool:
+                    vote, cid = self._tool_step(prefix, step)
+                    prefix = self._ack(cid)
+                    if step.tool == "private_vote":
+                        private = vote
+                    else:
+                        final = vote
+                else:
+                    text = self._text_step(prefix, step)
+                    prefix = []
+                    if opening is None:
+                        opening = text
+                    else:
+                        replies.append(text)
             if self.cfg.get("diagnostic_private_belief"):
-                belief = self._text_step(self._ack(cid), self.sc.diagnostic_step())
+                belief = self._text_step(prefix, self.sc.diagnostic_step())
         except (TrialError, ProviderError) as e:
             error = f"{type(e).__name__}: {e}"
 
@@ -132,12 +148,14 @@ class Trial:
             "role": self.cell.role,
             "visibility": self.cell.visibility,
             "pressure": self.cell.pressure,
+            "pressure_level": self.sc.pressure_level,
+            "confederates": self.sc.confederates,
             "group_size": len(self.sc.confederates),
             "run_index": self.run_index,
             "seed": self.seed,
             "started_at": started,
             "finished_at": _now(),
-            "slot_order": {"round_1": order[1], "round_2": order[2]},
+            "slot_order": {f"round_{k}": v for k, v in order.items() if k != "votes"} | {"votes": order["votes"]},
             "system_prompt": self.system,
             "tools": self.session.api_tools(),
             "api_messages": self.session.api_messages(),
@@ -145,7 +163,8 @@ class Trial:
             "private_initial_vote": private,
             "opening_statement": opening,
             "opening_names_target": bool(opening and self.sc.target in opening),
-            "reply": reply,
+            "reply": replies[0] if replies else None,   # reply to round 1
+            "replies": replies,
             "final_vote": final,
             "private_belief": belief,
             "reminders": self.reminders,
@@ -159,11 +178,12 @@ class Trial:
         }
 
 
-def run_key(r: dict) -> tuple[str, str, int]:
-    return (r["model_key"], r["cell_id"], r["run_index"])
+def run_key(r: dict) -> tuple[str, int, str, int]:
+    # Records before schema 4 have no pressure_level: they are the level-0 spike.
+    return (r["model_key"], r.get("pressure_level", 0), r["cell_id"], r["run_index"])
 
 
-def _done_keys(path: Path) -> set[tuple[str, str, int]]:
+def _done_keys(path: Path) -> set[tuple[str, int, str, int]]:
     """Runs already logged without an error, for resuming."""
     if not path.exists():
         return set()
@@ -178,20 +198,23 @@ def _done_keys(path: Path) -> set[tuple[str, str, int]]:
 
 
 def run_all(cfg: dict, out_path: Path, dry_run: bool = False, workers: int = 4,
-            limit: int | None = None, models: list[str] | None = None) -> list[dict]:
-    """Run every (model, cell, run_index) not already in out_path; append records as they finish.
-    With dry_run, every model is replaced by the deterministic fake provider."""
+            limit: int | None = None, models: list[str] | None = None,
+            cell_ids: list[str] | None = None) -> list[dict]:
+    """Run every (model, cell, run_index) at the config's pressure level not already in
+    out_path; append records as they finish. `cell_ids` restricts the cells. With
+    dry_run, every model is replaced by the deterministic fake provider."""
     scenario = Scenario(cfg)
     specs = [cfg["model_specs"][k] for k in (models or cfg["models"])]
     if dry_run:
         specs = [{**s, "provider": "fake"} for s in specs]
     done = _done_keys(out_path)
+    level = cfg["pressure_level"]
     todo = [
         (spec, cell, i)
         for spec in specs
         for i in range(cfg["runs_per_cell"])
         for cell in cells(cfg)
-        if (spec["key"], cell.id, i) not in done
+        if (cell_ids is None or cell.id in cell_ids) and (spec["key"], level, cell.id, i) not in done
     ][:limit]
     out_path.parent.mkdir(parents=True, exist_ok=True)
     lock = threading.Lock()
@@ -212,6 +235,6 @@ def run_all(cfg: dict, out_path: Path, dry_run: bool = False, workers: int = 4,
         for n, fut in enumerate(as_completed(futures), 1):
             r = fut.result()
             records.append(r)
-            print(f"[{n}/{len(todo)}] {r['model_key']} {r['cell_id']} #{r['run_index']}: {r['outcome']}"
+            print(f"[{n}/{len(todo)}] {r['model_key']} L{r['pressure_level']} {r['cell_id']} #{r['run_index']}: {r['outcome']}"
                   f"{' (' + r['error'] + ')' if r['error'] else ''}  {time.monotonic() - t0:.0f}s", flush=True)
     return records

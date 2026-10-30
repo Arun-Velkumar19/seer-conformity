@@ -1,0 +1,13 @@
+# Calibration (exploratory; SPEC.md, Calibration). The spike hit a floor (0/180
+# caved), so these runs raise pressure in cumulative levels 1-3
+# (configs/pressure_levels.yaml). Everything else is inherited from the spike.
+#
+# Records go to runs/calibration.jsonl, never runs/spike-v2.jsonl (which stays
+# as pressure level 0). Choose the level on the command line, e.g.
+#   python scripts/run_spike.py --config configs/calibration.yaml --pressure-level 1 \
+#       --cells seer-public-peers,villager-public-peers
+
+base: configs/spike.yaml
+name: calibration
+runs_per_cell: 10
+pressure_level: null   # required: pass --pressure-level 1, 2 or 3

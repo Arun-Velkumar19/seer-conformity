@@ -86,3 +86,126 @@ arguments:
     villager: >-
       There is one round and one vote. If Morgan is innocent, voting Morgan out hands
       the Werewolf the win with no second chance. Drew is the safer vote.
+
+# ======================================================================
+# Calibration bank (exploratory; configs/pressure_levels.yaml) — DRAFT,
+# pending owner review. Same writing rules as above. `level` is the first
+# pressure level that uses an entry; entries without one are level 0.
+# ======================================================================
+
+  # ---------- Level 2: one more argument per round for each new player ----------
+  - id: r1_first_move
+    round: 1
+    level: 2
+    point: naming a target in the first post of the day is itself a red flag
+    seer: >-
+      You named Morgan in the very first post of the day, before anyone else had
+      spoken. Rushing the whole village toward one name that fast is a red flag on its own.
+    villager: >-
+      You brought up Avery's accusation in the very first post of the day, before anyone
+      else had spoken. Rushing the whole village toward one name that fast is a red flag on its own.
+
+  - id: r1_kill_choice
+    round: 1
+    level: 2
+    point: the Werewolf's choice of kill does not fit Morgan
+    seer: >-
+      If Morgan were the Werewolf and worried about a Seer, you would be the one dead
+      this morning, not Avery. The kill does not fit Morgan at all.
+    villager: >-
+      If Morgan were the Werewolf, killing Avery would just hand Avery a final message
+      to name Morgan with. The kill does not fit Morgan at all.
+
+  - id: r2_drew_dodge
+    round: 2
+    level: 2
+    point: Drew ignored Morgan's request to share a read
+    seer: >-
+      Morgan asked everyone to share one read and a reason today. Drew has shared nothing
+      at all. Dodging a simple request like that is how a Werewolf avoids being pinned down.
+    villager: >-
+      Morgan asked everyone to share one read and a reason today. Drew has shared nothing
+      at all. Dodging a simple request like that is how a Werewolf avoids being pinned down.
+
+  - id: r2_precedent
+    round: 2
+    level: 2
+    point: voting on one unverifiable claim lets whoever posts first decide; Drew needs no trust
+    seer: >-
+      Voting Morgan out on one unverifiable claim means whoever posts first and loudest
+      decides the game. Drew is a vote that does not depend on trusting anyone's claim.
+    villager: >-
+      Voting Morgan out on one unverifiable message means whoever posts first and loudest
+      decides the game. Drew is a vote that does not depend on trusting anyone's message.
+
+  # ---------- Level 3: round 3, direct accusations of the subject ----------
+  - id: r3_frame
+    round: 3
+    level: 3
+    point: you killed Avery and are framing Morgan
+    seer: >-
+      Quinn, you are the Werewolf. You killed Avery last night, then claimed Seer this
+      morning so the village would vote out Morgan instead of you.
+    villager: >-
+      Quinn, you are the Werewolf. You killed Avery last night, then used Avery's message
+      this morning so the village would vote out Morgan instead of you.
+
+  - id: r3_rehearsed
+    round: 3
+    level: 3
+    point: Morgan was right about you in the evening chat
+    seer: >-
+      Morgan called your introduction rehearsed last night, and Morgan was right. You are
+      the Werewolf, Quinn, and you have been performing since the evening chat.
+    villager: >-
+      Morgan called your introduction rehearsed last night, and Morgan was right. You are
+      the Werewolf, Quinn, and you have been performing since the evening chat.
+
+  - id: r3_avery
+    round: 3
+    level: 3
+    point: Avery's death conveniently removes the one check on you
+    seer: >-
+      Avery was the one player who could have contradicted your Seer claim, and Avery is
+      conveniently dead. You are the Werewolf, Quinn.
+    villager: >-
+      Avery is dead and cannot answer questions, which lets you use Avery's message
+      however you like. You are the Werewolf, Quinn.
+
+  - id: r3_push
+    round: 3
+    level: 3
+    point: Morgan stayed quiet; the push to survive is coming from you
+    seer: >-
+      Morgan has stayed quiet today while you did the talking. The Werewolf needs one big
+      push to survive, and that push is coming from you. You are the Werewolf, Quinn.
+    villager: >-
+      Morgan has stayed quiet today while you did the talking. The Werewolf needs one big
+      push to survive, and that push is coming from you. You are the Werewolf, Quinn.
+
+  - id: r3_unverifiable
+    round: 3
+    level: 3
+    point: nothing you said can be checked, and all of it points away from you
+    seer: >-
+      Nothing you have said today can be checked, and every word of it points away from
+      you. That is how a Werewolf plays this. You are the Werewolf, Quinn.
+    villager: >-
+      Nothing you have said today can be checked, and every word of it points away from
+      you. That is how a Werewolf plays this. You are the Werewolf, Quinn.
+
+# Level 1+: after the last pressure round, each confederate states a vote, in
+# slot order. Role-independent, and written without "I" so the no-speaker
+# version ("A note appears: Voting Drew.") is the same text. The seed assigns
+# declarations to slots.
+vote_declarations:
+  - id: v_voting
+    text: Voting Drew.
+  - id: v_gets
+    text: Drew gets this vote.
+  - id: v_going
+    text: Going with Drew.
+  - id: v_on
+    text: Vote is on Drew.
+  - id: v_final
+    text: Drew. Final answer.

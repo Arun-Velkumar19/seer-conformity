@@ -4,6 +4,7 @@
     python scripts/sample_transcripts.py --outcome caved --n 3 # notable transcripts for RESULTS.md
     python scripts/sample_transcripts.py --cell seer-public-peers --run 4
     python scripts/sample_transcripts.py --dry-run             # from the dry-run records
+    python scripts/sample_transcripts.py --config configs/calibration.yaml --pressure-level 1
 
 Sampling is seeded (--seed) so a reviewer's sample can be reproduced. Output goes
 to runs/samples.md by default (gitignored with the rest of runs/).
@@ -40,7 +41,7 @@ def render_turn(m: dict) -> list[str]:
 
 
 def render(r: dict, show_system: bool) -> str:
-    head = (f"## {r['model_key']} · {r['cell_id']} · run {r['run_index']} · seed {r['seed']} · "
+    head = (f"## {r['model_key']} · L{r.get('pressure_level', 0)} · {r['cell_id']} · run {r['run_index']} · seed {r['seed']} · "
             f"outcome **{r['outcome']}**\n\n"
             f"{r['provider']} `{r['model']}`, effort {r['effort']} (sent: {r.get('effort_sent')})"
             f"{' (DRY RUN, fake model)' if r.get('dry_run') else ''}. Private vote: "
@@ -67,11 +68,12 @@ def main() -> None:
     ap.add_argument("--outcome", help="filter, e.g. caved")
     ap.add_argument("--cell", help="filter by cell id (overrides --pressure)")
     ap.add_argument("--run", type=int, help="filter by run index")
+    ap.add_argument("--pressure-level", type=int, help="filter by pressure level (calibration)")
     ap.add_argument("--system", action="store_true", help="include the system prompt")
     ap.add_argument("--out", help="Markdown path (default runs/samples.md, or runs/samples.dryrun.md)")
     args = ap.parse_args()
 
-    cfg = load_config(args.config)
+    cfg = load_config(args.config, args.pressure_level if args.pressure_level is not None else 0)
     suffix = ".dryrun" if args.dry_run else ""
     path = Path(args.jsonl) if args.jsonl else REPO_ROOT / "runs" / f"{cfg['name']}{suffix}.jsonl"
     out = Path(args.out) if args.out else REPO_ROOT / "runs" / f"samples{suffix}.md"
@@ -81,12 +83,13 @@ def main() -> None:
                       and (not args.role or r["role"] == args.role)
                       and (not args.outcome or r["outcome"] == args.outcome)
                       and (not args.cell or r["cell_id"] == args.cell)
-                      and (args.run is None or r["run_index"] == args.run))
+                      and (args.run is None or r["run_index"] == args.run)
+                      and (args.pressure_level is None or r.get("pressure_level", 0) == args.pressure_level))
     pool = [r for r in rs if keep(r)]
     picked = random.Random(args.seed).sample(pool, min(args.n, len(pool)))
-    picked.sort(key=lambda r: (r["model_key"], r["cell_id"], r["run_index"]))
+    picked.sort(key=lambda r: (r["model_key"], r.get("pressure_level", 0), r["cell_id"], r["run_index"]))
 
-    names = ("pressure", "model", "role", "outcome", "cell", "run")
+    names = ("pressure", "model", "role", "outcome", "cell", "run", "pressure_level")
     filters = {k: v for k, v in vars(args).items() if k in names and v is not None}
     if args.cell:
         filters.pop("pressure")

@@ -9,8 +9,12 @@ models: [gpt-6-luna]
 
 scenario:
   subject: Quinn
-  confederates: [Riley, Casey, Jordan]   # fixed slot order (group size 3)
-  candidates: [Riley, Casey, Jordan, Morgan, Drew]   # valid vote targets
+  silent: [Morgan, Drew]   # never speak; with the confederates, the valid vote targets
+
+# Confederates and extra pressure come from the pressure level
+# (configs/pressure_levels.yaml). The spike is level 0: Riley, Casey, Jordan.
+pressure_levels: configs/pressure_levels.yaml
+pressure_level: 0
 
 paths:
   rules: prompts/rules.md

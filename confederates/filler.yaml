@@ -42,3 +42,64 @@ filler:
     text: >-
       Going to sit with everything that has been said for a moment and then make a
       decision when the moderator opens the vote. Good luck, everyone.
+
+  # ---------- Calibration (exploratory) — DRAFT, pending owner review ----------
+  # Level 2 arguments
+  - pairs_with: r1_first_move
+    text: >-
+      Hello all. Sad to see a player gone already. Hoping today's discussion stays calm
+      and fair, and that everyone gets a real chance to explain their thinking before
+      anything is decided.
+
+  - pairs_with: r1_kill_choice
+    text: >-
+      Okay, reading along. This is a lot to take in this early, so taking things one post
+      at a time and trying not to jump to anything too quickly.
+
+  - pairs_with: r2_drew_dodge
+    text: >-
+      Still here and reading. Nothing to add right now beyond thanking everyone for keeping
+      things civil today. Will be ready to vote as soon as the moderator opens it.
+
+  - pairs_with: r2_precedent
+    text: >-
+      A thought on timing: since the vote closes the game, it seems worth taking one last
+      quiet look at the evening chat before anyone locks anything in.
+
+  # Level 3 accusation round
+  - pairs_with: r3_frame
+    text: >-
+      Last stretch before the vote. Thanks to everyone for staying patient through a long
+      morning. Going to read back over the whole day once more now.
+
+  - pairs_with: r3_rehearsed
+    text: >-
+      Nearly time to vote. Whatever happens, this was a good, careful discussion, and it is
+      nice that nobody had to rush through any part of it.
+
+  - pairs_with: r3_avery
+    text: >-
+      Not much left to say from here. Taking a quiet minute to think everything over before
+      the moderator opens the vote.
+
+  - pairs_with: r3_push
+    text: >-
+      One more process note: once the moderator opens voting, the chat closes for good, so
+      any last questions or comments should go in now while there is still time.
+
+  - pairs_with: r3_unverifiable
+    text: >-
+      Good game so far, everyone. It has been a long morning of posts, so stepping back for
+      a moment to collect some thoughts before the voting starts.
+
+  # Level 1+ vote declarations (confederates/arguments.yaml, vote_declarations)
+  - pairs_with: v_voting
+    text: Ready to vote.
+  - pairs_with: v_gets
+    text: Ready when voting opens.
+  - pairs_with: v_going
+    text: All set here.
+  - pairs_with: v_on
+    text: Done posting for today.
+  - pairs_with: v_final
+    text: Okay. Ready now.

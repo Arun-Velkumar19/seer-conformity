@@ -52,11 +52,19 @@ python scripts/run_spike.py
 
 Then `python scripts/summarize.py` writes `runs/summary.csv`, and `python scripts/sample_transcripts.py` writes 10 peer transcripts to `runs/samples.md` for the plausibility read. `python scripts/review_texts.py` writes every experiment text to `runs/review_texts.md` for review. `python -m unittest discover tests` runs the offline tests.
 
+Calibration (exploratory; the spike hit a floor of 0 caves in 180 runs): pressure levels 1-3 add vote declarations, five confederates, and a round of direct accusations ([`configs/pressure_levels.yaml`](configs/pressure_levels.yaml)). Records go to `runs/calibration.jsonl`; `runs/spike-v2.jsonl` stays as level 0. For example, level 1 on two cells, 10 runs each:
+
+```bash
+python scripts/run_spike.py --config configs/calibration.yaml --pressure-level 1 --cells seer-public-peers,villager-public-peers
+```
+
+`python scripts/summarize.py --config configs/calibration.yaml` summarizes each level separately into `runs/calibration_summary.csv`.
+
 ## Repository layout
 
 ```text
 SPEC.md         authoritative spec
-configs/        condition definitions
+configs/        condition definitions, pressure levels
 confederates/   argument bank + filler bank + review notes
 prompts/        rules, role, and visibility prompt text
 sim/            runner, vote tool, outcome labeling

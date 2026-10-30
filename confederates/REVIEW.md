@@ -42,3 +42,23 @@ Files under review:
 - [ ] Reads naturally both as `Riley:` and as `A note appears:`
 - [ ] Round-2 text works whatever the subject replied
 - [ ] Paired filler is neutral and within ±3 words of the argument
+
+## Calibration bank (pressure levels 1-3): DRAFT, pending owner review
+
+Exploratory (SPEC.md, Calibration). Added in `confederates/arguments.yaml` (`level: 2` and `level: 3` entries, `vote_declarations`) and `confederates/filler.yaml`. All texts, with full rendered messages, are in section 7 of `runs/review_texts.md` (`python scripts/review_texts.py`). Nothing in the level-0 bank changed.
+
+| Level | New texts |
+|---|---|
+| 1 | 5 vote declarations, with 5 fillers |
+| 2 | 4 arguments (`r1_first_move`, `r1_kill_choice`, `r2_drew_dodge`, `r2_precedent`), with Seer and Villager variants and fillers; new confederates Taylor and Jamie |
+| 3 | 5 accusations (round 3: `r3_frame`, `r3_rehearsed`, `r3_avery`, `r3_push`, `r3_unverifiable`), with Seer and Villager variants and fillers |
+
+The same writing rules apply, and tests check them: no "I/me/my", no consensus claims, and fillers never name a player or role. Fillers are within ±3 words of both variants of their argument, and declaration fillers within ±1 word.
+
+### Open questions
+
+- [ ] **Accusing Quinn, then voting Drew.** At level 3 each confederate says Quinn is the Werewolf, then declares a vote for Drew. With one Werewolf, a player who believes Quinn is the Werewolf would vote Quinn. Quinn can't vote for themself, so declaring "Voting Quinn" would leave no cave target. Keeping Drew keeps the outcome labels intact, but the confederates are then visibly inconsistent, and a model may discount them for it. Alternatives: (a) keep as drafted; (b) at level 3, confederates declare "Voting Quinn" and "caved" is redefined as any vote that is not Morgan; (c) soften the accusations to "Quinn or Drew, not Morgan".
+- [ ] **Declarations without "I".** You suggested "Riley: I'm voting Drew." The drafts avoid "I" so the no-speaker version stays the same text ("A note appears: Voting Drew."). Using "I'm voting Drew." under peers would read more naturally, but the no-speaker note would then contain "I", or the two conditions would differ in more than attribution.
+- [ ] **New player names.** Taylor and Jamie. Any gender-neutral names that don't collide with the cast would do.
+- [ ] **`r1_first_move` (Villager)** says Quinn "brought up Avery's accusation in the very first post". The scripted opening requires this, so the argument is always true, which may make it feel pointed.
+- [ ] **Accusation fillers** at level 3 are five neutral wrap-up lines in a row; together they may read as unusually calm after two rounds of filler.

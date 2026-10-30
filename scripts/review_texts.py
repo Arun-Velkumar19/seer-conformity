@@ -1,5 +1,6 @@
 """Render every experiment text into one Markdown page for human review,
-exactly as the model receives it.
+exactly as the model receives it: the spike (pressure level 0), then the
+calibration additions at levels 1-3.
 
     python scripts/review_texts.py          # writes runs/review_texts.md
 """
@@ -75,11 +76,87 @@ def build(cfg: dict) -> str:
     o.append("## 6. Filler bank (`confederates/filler.yaml`), pressure = none\n\n"
              "Each filler takes the slot of the argument it is paired with. "
              "Word counts: filler / Seer argument / Villager argument.")
-    for aid, text in sc.filler.items():
-        a = sc.arguments[aid]
-        counts = f"{len(text.split())} / {len(a['seer'].split())} / {len(a['villager'].split())}"
-        o.append(f"### pairs with `{aid}` · {counts} words\n\n" + quote(text))
+    for aid in sc.arguments:
+        o.append(filler_entry(sc, aid))
+    o += calibration(cfg)
     return "\n\n".join(o) + "\n"
+
+
+def filler_entry(sc: Scenario, aid: str) -> str:
+    text = sc.filler[aid]
+    a = sc.bank[aid]
+    counts = f"{len(text.split())} / {len(a['seer'].split())} / {len(a['villager'].split())}"
+    return f"### pairs with `{aid}` · {counts} words\n\n" + quote(text)
+
+
+def argument_entry(sc: Scenario, aid: str) -> str:
+    """One bank entry with its paired filler, as in sections 5 and 6."""
+    a = sc.bank[aid]
+    head = f"#### `{aid}` · round {a['round']} · {a['point']}\n\n"
+    if a["seer"].strip() == a["villager"].strip():
+        body = "**Seer and Villager (same text)**\n\n" + quote(a["seer"])
+    else:
+        body = "**Seer**\n\n" + quote(a["seer"]) + "\n\n**Villager**\n\n" + quote(a["villager"])
+    text = sc.filler[aid]
+    counts = f"{len(text.split())} / {len(a['seer'].split())} / {len(a['villager'].split())}"
+    return head + body + f"\n\n**Paired filler** ({counts} words: filler / Seer / Villager)\n\n" + quote(text)
+
+
+def calibration(spike_cfg: dict) -> list[str]:
+    lv = {n: Scenario(load_config("configs/calibration.yaml", n)) for n in (1, 2, 3)}
+    s0 = Scenario(spike_cfg)
+    seer, vill = Cell("seer", "public", "peers"), Cell("villager", "public", "peers")
+    o = [
+        "## 7. Calibration pressure levels (exploratory, pending review)\n\n"
+        "The spike (level 0, sections 1-6) produced no caves, so calibration raises pressure in cumulative "
+        "levels (`configs/pressure_levels.yaml`). Everything in sections 1-6 is unchanged at every level "
+        "except what is listed here. The three pressure conditions still differ only in attribution: "
+        f"no-speaker swaps each `Name: ` for `{s0.no_speaker_prefix}`, and none uses the paired filler.\n\n"
+        "| Level | Adds | Confederates | Pressure rounds |\n|---|---|---|---|\n"
+        "| 0 | the spike as run (`runs/spike-v2.jsonl`) | 3 | 2 |\n"
+        "| 1 | each confederate states a vote after the last round | 3 | 2 |\n"
+        "| 2 | Taylor and Jamie join as confederates, with 2 new arguments per round | 5 | 2 |\n"
+        "| 3 | a third round in which every confederate accuses Quinn of being the Werewolf | 5 | 3 |",
+
+        "### 7.1 Level 1: vote declarations\n\n"
+        "Role-independent, and written without \"I\" so the note version reads the same. The seed assigns "
+        "declarations to slots; 3 are used at level 1 and all 5 from level 2.\n\n"
+        "| id | Declaration (peers / no-speaker) | Filler (none) |\n|---|---|---|\n"
+        + "\n".join(f"| `{i}` | {t} | {lv[1].filler[i]} |" for i, t in lv[1].declarations.items()),
+        f"Full final message at level 1, Seer · public, seed {EXAMPLE_SEED} (rounds 1 and 2 are identical to level 0):",
+    ]
+    for p in ("peers", "no_speaker", "none"):
+        o.append(f"**{p}**\n\n" + quote(lv[1].steps(Cell("seer", "public", p), EXAMPLE_SEED)[3].text))
+
+    sp0, sp2 = s0.system_prompt(seer).splitlines(), lv[2].system_prompt(seer).splitlines()
+    changed = [b for a, b in zip(sp0, sp2) if a != b]
+    o += [
+        "### 7.2 Level 2: five confederates\n\n"
+        "System prompt lines that change (the rest is identical). Morgan and Drew stay silent, and Taylor and "
+        "Jamie are added to the vote options.\n\n" + "\n\n".join(quote(line) for line in changed),
+        "New arguments, one per round for each new player. Rounds draw from all five arguments, "
+        "shuffled by the seed.",
+    ]
+    o += [argument_entry(lv[2], i) for i, a in lv[2].bank.items() if a.get("level") == 2]
+    o.append(f"Full round messages at level 2, Seer · public · peers, seed {EXAMPLE_SEED}:")
+    for st in lv[2].steps(seer, EXAMPLE_SEED)[2:]:
+        o.append(f"**{st.name}**\n\n" + quote(st.text))
+
+    o += [
+        "### 7.3 Level 3: accusation round\n\n"
+        "A third pressure round, after Quinn replies to round 2, in which each confederate directly accuses "
+        "Quinn of being the Werewolf. \"Last chance to speak\" moves from round 1 to round 2. The vote "
+        "declarations follow round 3.",
+    ]
+    o += [argument_entry(lv[3], i) for i, a in lv[3].bank.items() if a.get("level") == 3]
+    o.append(f"Full step messages at level 3, Seer · public · peers, seed {EXAMPLE_SEED}:")
+    for st in lv[3].steps(seer, EXAMPLE_SEED)[2:]:
+        o.append(f"**{st.name}**" + (f" (expects `{st.tool}` tool)" if st.tool else "") + "\n\n" + quote(st.text))
+    o.append(f"Round 3 for the Villager, and under the other two conditions (seed {EXAMPLE_SEED}):")
+    o.append("**Villager · peers**\n\n" + quote(lv[3].steps(vill, EXAMPLE_SEED)[4].text))
+    for p in ("no_speaker", "none"):
+        o.append(f"**Seer · {p}**\n\n" + quote(lv[3].steps(Cell("seer", "public", p), EXAMPLE_SEED)[4].text))
+    return o
 
 
 def main() -> None:

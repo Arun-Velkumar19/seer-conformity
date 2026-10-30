@@ -1,7 +1,7 @@
 """Render the subject's system prompt and per-step moderator messages for a cell.
 
 All text comes from prompts/ and confederates/; nothing experimental is
-hard-coded here. Rendering is deterministic in (cell, seed).
+hard-coded here. Rendering is deterministic in (pressure level, cell, seed).
 """
 
 from __future__ import annotations
@@ -24,6 +24,13 @@ def _read(path: str) -> str:
 
 def _yaml(path: str) -> dict:
     return yaml.safe_load(_read(path))
+
+
+def and_list(names: list[str]) -> str:
+    """"A, B, and C" (two names: "A and B")."""
+    if len(names) <= 2:
+        return " and ".join(names)
+    return ", ".join(names[:-1]) + ", and " + names[-1]
 
 
 def fill(template: str, **values: str) -> str:
@@ -49,7 +56,11 @@ class Scenario:
         sc = cfg["scenario"]
         self.subject = sc["subject"]
         self.confederates = sc["confederates"]
+        self.silent = sc["silent"]
         self.candidates = sc["candidates"]
+        self.pressure_level = cfg["pressure_level"]
+        self.level = cfg["level"]
+        self.n_rounds = 3 if self.level["accusation_round"] else 2
 
         self.rules = _COMMENT.sub("", _read(p["rules"]))
         self.roles = {k: _read(v) for k, v in p["roles"].items()}
@@ -60,46 +71,69 @@ class Scenario:
         bank = _yaml(p["arguments"])
         self.target = bank["target"]
         self.suggested_target = bank["suggested_target"]
-        self.arguments = {a["id"]: a for a in bank["arguments"]}
+        self.bank = {a["id"]: a for a in bank["arguments"]}          # every level
+        self.arguments = {i: a for i, a in self.bank.items()            # this level
+                          if a.get("level", 0) <= self.pressure_level}
+        self.declarations = {d["id"]: d["text"] for d in bank["vote_declarations"]}
         self.filler = {f["pairs_with"]: f["text"] for f in _yaml(p["filler"])["filler"]}
 
         self._validate()
 
     def _validate(self) -> None:
-        if set(self.filler) != set(self.arguments):
-            raise ValueError("every argument needs exactly one paired filler")
+        if set(self.filler) != set(self.bank) | set(self.declarations):
+            raise ValueError("every argument and vote declaration needs exactly one paired filler")
         for t in (self.target, self.suggested_target):
             if t not in self.candidates:
                 raise ValueError(f"{t} is not a vote candidate")
-        for r in (1, 2):
+        for r in range(1, self.n_rounds + 1):
             if len(self.round_ids(r)) != len(self.confederates):
-                raise ValueError(f"round {r} needs one argument per confederate slot")
+                raise ValueError(f"round {r} needs one argument per confederate slot at level {self.pressure_level}")
+        if self.level["vote_declarations"] and len(self.declarations) < len(self.confederates):
+            raise ValueError("need one vote declaration per confederate slot")
 
     def round_ids(self, round_no: int) -> list[str]:
         return [i for i, a in self.arguments.items() if a["round"] == round_no]
 
-    def slot_order(self, seed: int) -> dict[int, list[str]]:
-        """Argument ids per slot, per round. Depends only on the seed, never the cell."""
+    def slot_order(self, seed: int) -> dict:
+        """Argument ids per slot, per round, plus vote-declaration ids per slot
+        ("votes", empty below level 1). Depends only on the seed and the pressure
+        level, never the cell. Rounds 1-2 draw first, so levels 0 and 1 share them."""
         rng = random.Random(seed)
-        order = {}
-        for r in (1, 2):
+        order: dict = {}
+        for r in range(1, self.n_rounds + 1):
             ids = sorted(self.round_ids(r))
             rng.shuffle(ids)
             order[r] = ids
+        order["votes"] = []
+        if self.level["vote_declarations"]:
+            ids = sorted(self.declarations)
+            rng.shuffle(ids)
+            order["votes"] = ids[:len(self.confederates)]
         return order
 
     def system_prompt(self, cell: Cell) -> str:
-        return fill(self.rules, role_block=self.roles[cell.role])
+        players = self.confederates + self.silent
+        return fill(
+            self.rules,
+            role_block=self.roles[cell.role],
+            player_count=str(len(players) + 2),  # + Quinn and Avery
+            players=", ".join(players),
+            living=and_list(players),
+            greeters=and_list(self.confederates),
+        )
 
-    def round_messages(self, cell: Cell, ids: list[str]) -> str:
-        lines = []
-        for speaker, arg_id in zip(self.confederates, ids):
-            if cell.pressure == "none":
-                lines.append(f"{speaker}: {self.filler[arg_id].strip()}")
-            elif cell.pressure == "no_speaker":
-                lines.append(f"{self.no_speaker_prefix}{self.arguments[arg_id][cell.role].strip()}")
-            else:
-                lines.append(f"{speaker}: {self.arguments[arg_id][cell.role].strip()}")
+    def _line(self, cell: Cell, speaker: str, pressure_text: str, filler_text: str) -> str:
+        if cell.pressure == "none":
+            return f"{speaker}: {filler_text.strip()}"
+        if cell.pressure == "no_speaker":
+            return f"{self.no_speaker_prefix}{pressure_text.strip()}"
+        return f"{speaker}: {pressure_text.strip()}"
+
+    def round_messages(self, cell: Cell, ids: list[str], vote_ids: list[str] = ()) -> str:
+        lines = [self._line(cell, s, self.arguments[i][cell.role], self.filler[i])
+                 for s, i in zip(self.confederates, ids)]
+        lines += [self._line(cell, s, self.declarations[i], self.filler[i])
+                  for s, i in zip(self.confederates, vote_ids)]
         return "\n\n".join(lines)
 
     def steps(self, cell: Cell, seed: int) -> list[Step]:
@@ -108,12 +142,12 @@ class Scenario:
             "visibility_block": self.visibility[cell.visibility],
             "opening_requirement": self.turns["opening_requirement"][cell.role],
         }
-        rounds = {"pressure_round_1": 1, "pressure_round_2_and_final_vote": 2}
         out = []
-        for s in self.turns["steps"]:
+        for s in self.turns["steps" if self.n_rounds == 2 else "steps_three_rounds"]:
             kv = dict(values)
-            if s["step"] in rounds:
-                kv["round_messages"] = self.round_messages(cell, order[rounds[s["step"]]])
+            if "round" in s:
+                last = s["round"] == self.n_rounds
+                kv["round_messages"] = self.round_messages(cell, order[s["round"]], order["votes"] if last else ())
             needed = {k: v for k, v in kv.items() if "{" + k + "}" in s["text"]}
             out.append(Step(s["step"], fill(s["text"], **needed), s.get("tool")))
         return out

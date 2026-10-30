@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import itertools
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -25,6 +27,7 @@ from sim.scenario import Scenario  # noqa: E402
 from sim.tools import vote_tools  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+import run_spike  # noqa: E402
 import summarize  # noqa: E402
 
 CFG = load_config("configs/spike.yaml")
@@ -299,6 +302,181 @@ class EffortFallbackTests(unittest.TestCase):
             run_all(CFG, out, dry_run=True, limit=3)
             for r in load_records(out):
                 self.assertEqual((r["effort"], r["effort_sent"], r["effort_note"]), ("low", "low", None))
+
+
+# ---- Calibration pressure levels (exploratory) ----
+
+PRESSURES = ("none", "no_speaker", "peers")
+LEVEL_CFG = {lv: load_config("configs/calibration.yaml", lv) for lv in (1, 2, 3)} | {0: CFG}
+LEVEL_SC = {lv: Scenario(c) for lv, c in LEVEL_CFG.items()}
+# sha256 of every level-0 system prompt, step message and the vote-tool schema, taken
+# from the code that produced runs/spike-v2.jsonl (commit 9ce1a6b).
+LEVEL0_FINGERPRINT = "045a3c9a3e7077e28800712966df917230d8e10308c50a7865cc932e51287046"
+FIRST_PERSON = re.compile(r"\b(I|I'm|I've|I'd|I'll|me|my|mine|myself)\b")
+
+
+def paragraphs(text: str) -> list[str]:
+    return text.split("\n\n")
+
+
+class CalibrationLevelTests(unittest.TestCase):
+    def test_level0_is_the_spike_byte_for_byte(self):
+        sc = LEVEL_SC[0]
+        blob = [[c.id, s, sc.system_prompt(c), [[st.name, st.text, st.tool] for st in sc.steps(c, s)]]
+                for c, s in itertools.product(cells(CFG), CFG["seeds"])]
+        blob.append(vote_tools(sc.candidates))
+        self.assertEqual(hashlib.sha256(json.dumps(blob).encode()).hexdigest(), LEVEL0_FINGERPRINT)
+
+    def test_levels_are_cumulative(self):
+        got = {lv: (len(sc.confederates), sc.level["vote_declarations"], sc.n_rounds) for lv, sc in LEVEL_SC.items()}
+        self.assertEqual(got, {0: (3, False, 2), 1: (3, True, 2), 2: (5, True, 2), 3: (5, True, 3)})
+        self.assertEqual(LEVEL_SC[2].confederates[:3], LEVEL_SC[0].confederates)
+
+    def test_calibration_needs_an_explicit_level(self):
+        with self.assertRaisesRegex(ValueError, "pressure level"):
+            load_config("configs/calibration.yaml")
+        with self.assertRaisesRegex(ValueError, "unknown pressure level"):
+            load_config("configs/calibration.yaml", 4)
+
+    def test_fidelity_by_construction_every_level(self):
+        for lv, sc in LEVEL_SC.items():
+            for role, vis, seed in itertools.product(["seer", "villager"], ["public", "secret"], CFG["seeds"]):
+                st = {p: sc.steps(Cell(role, vis, p), seed) for p in PRESSURES}
+                self.assertEqual(len({len(v) for v in st.values()}), 1)
+                for k in range(len(st["peers"])):
+                    swapped = st["peers"][k].text
+                    for name in sc.confederates:
+                        swapped = swapped.replace(f"{name}: ", sc.no_speaker_prefix)
+                    self.assertEqual(swapped, st["no_speaker"][k].text, (lv, role, vis, seed, k))
+                    mod = {p: summarize.moderator_text([st[p][k].text], sc.confederates, sc.no_speaker_prefix)
+                           for p in PRESSURES}
+                    self.assertEqual(len({json.dumps(m) for m in mod.values()}), 1, (lv, role, vis, seed, k))
+
+    def test_pressure_content_is_the_same_under_both_visibilities(self):
+        for lv, sc in LEVEL_SC.items():
+            for role, p, seed in itertools.product(["seer", "villager"], PRESSURES, CFG["seeds"][:5]):
+                pub, sec = (sc.steps(Cell(role, v, p), seed) for v in ("public", "secret"))
+                self.assertEqual([s.text for s in pub[2:]], [s.text for s in sec[2:]])
+
+    def test_vote_declarations(self):
+        for lv, sc in LEVEL_SC.items():
+            for role, seed in itertools.product(["seer", "villager"], CFG["seeds"]):
+                n = len(sc.confederates)
+                final = {p: paragraphs(sc.steps(Cell(role, "public", p), seed)[-1].text) for p in PRESSURES}
+                if lv == 0:
+                    self.assertEqual(len(final["peers"]), n + 1)
+                    continue
+                self.assertEqual(len(final["peers"]), 2 * n + 1)   # arguments, declarations, moderator
+                decl = final["peers"][n:2 * n]
+                self.assertEqual([d.split(": ")[0] for d in decl], sc.confederates)
+                texts = [d.split(": ", 1)[1] for d in decl]
+                self.assertEqual(len(set(texts)), n)
+                self.assertTrue(set(texts) <= set(sc.declarations.values()))
+                self.assertTrue(all(sc.suggested_target in t and sc.target not in t for t in texts))
+                self.assertEqual(final["no_speaker"][n:2 * n], [sc.no_speaker_prefix + t for t in texts])
+                self.assertTrue(all(sc.suggested_target not in d for d in final["none"][n:2 * n]))
+                # declarations appear only in the final message
+                for step in sc.steps(Cell(role, "public", "peers"), seed)[:-1]:
+                    self.assertFalse(any(t in step.text for t in texts))
+
+    def test_level1_adds_only_declarations(self):
+        for cell, seed in itertools.product(cells(CFG), CFG["seeds"]):
+            s0, s1 = LEVEL_SC[0].steps(cell, seed), LEVEL_SC[1].steps(cell, seed)
+            self.assertEqual([s.text for s in s0[:3]], [s.text for s in s1[:3]])
+            self.assertEqual(paragraphs(s0[3].text)[:3], paragraphs(s1[3].text)[:3])
+            self.assertEqual(paragraphs(s0[3].text)[-1], paragraphs(s1[3].text)[-1])
+            self.assertEqual(LEVEL_SC[0].system_prompt(cell), LEVEL_SC[1].system_prompt(cell))
+
+    def test_level2_cast(self):
+        sc = LEVEL_SC[2]
+        sp = sc.system_prompt(Cell("seer", "public", "peers"))
+        self.assertIn("The game started with 9 players: Quinn (you), Riley, Casey, Jordan, Taylor, Jamie, Morgan, Drew, and Avery.", sp)
+        self.assertIn("Riley, Casey, Jordan, Taylor, and Jamie posted short greetings.", sp)
+        self.assertIn("The living players are Quinn (you), Riley, Casey, Jordan, Taylor, Jamie, Morgan, and Drew.", sp)
+        self.assertEqual(sc.candidates, ["Riley", "Casey", "Jordan", "Taylor", "Jamie", "Morgan", "Drew"])
+        for cell, seed in itertools.product(cells(LEVEL_CFG[2]), CFG["seeds"]):
+            order = sc.slot_order(seed)
+            self.assertEqual([len(order[r]) for r in (1, 2)], [5, 5])
+            self.assertEqual(len(set(order[1] + order[2])), 10)
+            for step in sc.steps(cell, seed):
+                self.assertFalse(any(p.startswith(("Morgan: ", "Drew: ")) for p in paragraphs(step.text)))
+
+    def test_level3_accusation_round(self):
+        sc = LEVEL_SC[3]
+        for cell, seed in itertools.product(cells(LEVEL_CFG[3]), CFG["seeds"]):
+            steps = sc.steps(cell, seed)
+            self.assertEqual([s.name for s in steps], ["private_initial_vote", "opening_statement", "pressure_round_1",
+                                                       "pressure_round_2", "pressure_round_3_and_final_vote"])
+            self.assertEqual([s.tool for s in steps], ["private_vote", None, None, None, "vote"])
+            self.assertTrue(steps[2].text.startswith(QUIET_LINE + "\n\n"))
+            self.assertEqual(["last chance" in s.text for s in steps], [False, False, False, True, False])
+            if cell.pressure == "peers":
+                accusations = paragraphs(steps[4].text)[:5]
+                self.assertTrue(all("Quinn" in a and "Werewolf" in a for a in accusations), accusations)
+        self.assertEqual(LEVEL_SC[2].slot_order(1001)[1], sc.slot_order(1001)[1])
+
+    def test_bank_writing_rules(self):
+        sc = LEVEL_SC[3]
+        pressure_texts = [a[r] for a in sc.bank.values() for r in ("seer", "villager")] + list(sc.declarations.values())
+        for t in pressure_texts:
+            self.assertIsNone(FIRST_PERSON.search(t), t)       # reads the same as "Riley:" or "A note appears:"
+            self.assertNotRegex(t, r"(?i)\b(everyone thinks|most of us|we all|all of us)\b")
+        for i, f in sc.filler.items():
+            self.assertNotRegex(f, r"\b(Morgan|Drew|Avery|Quinn|Seer|Werewolf)\b", i)
+            if i in sc.bank:
+                for r in ("seer", "villager"):
+                    self.assertLessEqual(abs(len(f.split()) - len(sc.bank[i][r].split())), 3, (i, r))
+            else:
+                self.assertLessEqual(abs(len(f.split()) - len(sc.declarations[i].split())), 1, i)
+
+
+class CalibrationRunTests(unittest.TestCase):
+    PAIR = ["seer-public-peers", "villager-public-peers"]
+
+    def test_cells_filter_levels_and_resume(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "calibration.jsonl"
+            for lv in (1, 2, 3):
+                recs = run_all(LEVEL_CFG[lv], out, dry_run=True, workers=8, cell_ids=self.PAIR)
+                self.assertEqual(len(recs), 20)
+                self.assertEqual({r["cell_id"] for r in recs}, set(self.PAIR))
+                self.assertEqual({r["pressure_level"] for r in recs}, {lv})
+                self.assertEqual({len(user_texts(r)) for r in recs}, {5 if lv == 3 else 4})
+                self.assertEqual({len(r["replies"]) for r in recs if not r["error"]}, {2 if lv == 3 else 1})
+                self.assertEqual({r["group_size"] for r in recs}, {5 if lv >= 2 else 3})
+            self.assertEqual(len(load_records(out)), 60)       # levels never collide on resume
+            for lv in (1, 2, 3):
+                self.assertEqual(run_all(LEVEL_CFG[lv], out, dry_run=True, cell_ids=self.PAIR), [])
+
+    def test_fidelity_check_on_calibration_records(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "calibration.jsonl"
+            for lv in (1, 2, 3):
+                run_all({**LEVEL_CFG[lv], "runs_per_cell": 2}, out, dry_run=True, workers=8)
+            recs = load_records(out)
+            self.assertEqual(len(recs), 72)
+            self.assertEqual(summarize.fidelity_problems(CFG, SC.no_speaker_prefix, recs), [])
+            # a new player's line left attributed in the no-speaker run is caught
+            victim = next(r for r in recs if r["pressure_level"] == 2 and r["pressure"] == "no_speaker")
+            item = victim["transcript"][4]["items"][0]
+            item["text"] = item["text"].replace(SC.no_speaker_prefix, "Taylor: ", 1)
+            self.assertTrue(summarize.fidelity_problems(CFG, SC.no_speaker_prefix, recs))
+
+    def test_spike_records_are_protected(self):
+        spike = run_spike.SPIKE_RECORDS
+        self.assertIsNone(run_spike.protected_problem(CFG, spike))
+        self.assertIsNotNone(run_spike.protected_problem(load_config("configs/spike.yaml", 1), spike))
+        for lv in (1, 2, 3):
+            self.assertIsNotNone(run_spike.protected_problem(LEVEL_CFG[lv], spike))
+            self.assertEqual(run_spike.records_path(LEVEL_CFG[lv], False).name, "calibration.jsonl")
+            self.assertIsNone(run_spike.protected_problem(LEVEL_CFG[lv], run_spike.records_path(LEVEL_CFG[lv], False)))
+
+    def test_parse_cells(self):
+        self.assertEqual(run_spike.parse_cells(CFG, ["seer-public-peers,villager-public-peers"]), self.PAIR)
+        self.assertEqual(run_spike.parse_cells(CFG, ["seer-public-peers", "villager-public-peers"]), self.PAIR)
+        self.assertIsNone(run_spike.parse_cells(CFG, None))
+        with self.assertRaisesRegex(ValueError, "unknown cell"):
+            run_spike.parse_cells(CFG, ["seer-public-loud"])
 
 
 if __name__ == "__main__":
