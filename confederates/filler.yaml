@@ -97,6 +97,21 @@ filler:
     text: >-
       Morning. Still reading through everything before posting anything real.
 
+  - pairs_with: cc1_doubt   # same text as the r1_unverifiable filler it stands in for
+    text: >-
+      Okay. Let's make sure every living player gets a turn to speak before the vote
+      opens, so that nobody ends up feeling rushed into a decision today.
+
+  - pairs_with: cc2_followup
+    text: >-
+      Back again. Still weighing everything that has been posted so far, and not ready to
+      say much more until the whole morning has been read through properly.
+
+  - pairs_with: cc3_followup
+    text: >-
+      Done reading through the morning now. Nothing else to add for today before the
+      vote, so just waiting for the moderator to open it.
+
   - pairs_with: cc2_fits
     text: >-
       Thanks for the replies so far. Still sorting through all of it, and hoping to have

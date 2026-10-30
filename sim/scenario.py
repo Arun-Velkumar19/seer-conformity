@@ -99,21 +99,30 @@ class Scenario:
             for r in range(2, self.n_rounds + 1):
                 if len(self.support_ids(r)) != len(self.confederates) - 1:
                     raise ValueError(f"round {r} needs one counterclaim support line per other confederate")
+                if len(self._cc_ids(r, "followup")) != 1:
+                    raise ValueError(f"round {r} needs one counterclaimer follow-up")
+            for i, a in self.arguments.items():
+                if a.get("counterclaim") == "replaces" and a["replaces"] not in self.round_ids(a["round"]):
+                    raise ValueError(f"{i} replaces {a['replaces']!r}, which is not a round-{a['round']} argument")
 
     def round_ids(self, round_no: int) -> list[str]:
         """Regular arguments for a round (counterclaim entries are placed separately)."""
         return [i for i, a in self.arguments.items() if a["round"] == round_no and "counterclaim" not in a]
 
+    def _cc_ids(self, round_no: int, kind: str) -> list[str]:
+        return [i for i, a in self.arguments.items() if a["round"] == round_no and a.get("counterclaim") == kind]
+
     def support_ids(self, round_no: int) -> list[str]:
-        return [i for i, a in self.arguments.items() if a["round"] == round_no and a.get("counterclaim") == "support"]
+        return self._cc_ids(round_no, "support")
 
     def slot_order(self, seed: int) -> dict:
         """Argument ids per slot, per round, plus vote-declaration ids per slot
         ("votes", empty below level 1) and the counterclaimer's name ("counterclaimer",
         level 4 only). Depends only on the seed and the pressure level, never the cell.
         Draws happen in level order, so each level keeps the lower levels' slots: at
-        level 4 the counterclaimer's slot takes the claim in round 1 and keeps its
-        level-3 lines after that, while the other slots get support lines in rounds 2-3."""
+        level 4 the counterclaimer's slot takes the claim in round 1 and its
+        follow-up in rounds 2-3, while the other slots get support lines. Arguments that
+        undercut the counterclaim are swapped for their `replaces` entry."""
         rng = random.Random(seed)
         order: dict = {}
         for r in range(1, self.n_rounds + 1):
@@ -129,11 +138,14 @@ class Scenario:
             k = rng.randrange(len(self.confederates))
             order["counterclaimer"] = self.confederates[k]
             order[1][k] = self.claim_id
+            swaps = {a["replaces"]: i for i, a in self.arguments.items() if a.get("counterclaim") == "replaces"}
+            order[1] = [swaps.get(x, x) for x in order[1]]
             for r in range(2, self.n_rounds + 1):
                 support = sorted(self.support_ids(r))
                 rng.shuffle(support)
                 rest = iter(support)
-                order[r] = [order[r][j] if j == k else next(rest) for j in range(len(self.confederates))]
+                followup = self._cc_ids(r, "followup")[0]
+                order[r] = [followup if j == k else next(rest) for j in range(len(self.confederates))]
         return order
 
     def system_prompt(self, cell: Cell) -> str:

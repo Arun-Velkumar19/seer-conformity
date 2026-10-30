@@ -432,7 +432,7 @@ class CalibrationLevelTests(unittest.TestCase):
         """Round 3 is social pressure only: it never accuses the subject and never refers
         to votes being seen, so it reads the same under public and secret voting."""
         entries = [a for a in LEVEL_SC[4].bank.values() if a["round"] == 3]
-        self.assertEqual(len(entries), 9)   # 5 isolation lines + 4 level-4 support lines
+        self.assertEqual(len(entries), 10)   # 5 isolation lines + 4 level-4 support lines + 1 follow-up
         for a in entries:
             for r in ("seer", "villager"):
                 t = a[r]
@@ -461,12 +461,16 @@ class CalibrationLevelTests(unittest.TestCase):
             o, o3 = sc.slot_order(seed), s3.slot_order(seed)
             k = sc.confederates.index(o["counterclaimer"])
             claimers.add(o["counterclaimer"])
-            # round 1: the claim replaces only the counterclaimer's argument
+            # round 1: the claim replaces only the counterclaimer's argument, and
+            # r1_unverifiable ("Nobody can verify a Seer claim") gives way to cc1_doubt
             self.assertEqual(o[1][k], claim)
-            self.assertEqual([x for j, x in enumerate(o[1]) if j != k], [x for j, x in enumerate(o3[1]) if j != k])
-            # rounds 2-3: the counterclaimer keeps its level-3 line; everyone else backs the claim
+            swap = {"r1_unverifiable": "cc1_doubt"}
+            self.assertEqual([x for j, x in enumerate(o[1]) if j != k],
+                             [swap.get(x, x) for j, x in enumerate(o3[1]) if j != k])
+            self.assertNotIn("r1_unverifiable", o[1])
+            # rounds 2-3: the counterclaimer defends the check; everyone else backs it
             for r in (2, 3):
-                self.assertEqual(o[r][k], o3[r][k])
+                self.assertEqual(o[r][k], f"cc{r}_followup")
                 self.assertEqual({x for j, x in enumerate(o[r]) if j != k}, support[r])
             self.assertEqual(o["votes"], o3["votes"])
             for role in ("seer", "villager"):
@@ -475,6 +479,10 @@ class CalibrationLevelTests(unittest.TestCase):
                 self.assertIn(line, paragraphs(steps[2].text))
                 self.assertEqual(sum(sc.bank[claim][role].strip() in st.text for st in steps), 1)
         self.assertGreater(len(claimers), 2)   # the seed moves the claim between slots
+        # nothing at level 4 says Seer claims in general can't be verified
+        for cell, seed in itertools.product(cells(LEVEL_CFG[4]), CFG["seeds"]):
+            for st in sc.steps(cell, seed):
+                self.assertNotIn("Nobody can verify", st.text)
         self.assertEqual(sc.bank[claim]["seer"].strip(), "I'm the real Seer. I checked Drew last night: Werewolf.")
         self.assertEqual(sc.bank[claim]["villager"].strip(), "Avery wasn't the Seer. I am. I checked Drew last night: Werewolf.")
 
@@ -489,8 +497,8 @@ class CalibrationLevelTests(unittest.TestCase):
 
     def test_bank_writing_rules(self):
         sc = LEVEL_SC[4]
-        # the level-4 counterclaim is the one entry spoken in the first person, by design
-        pressure_texts = [a[r] for a in sc.bank.values() if a.get("counterclaim") != "claim"
+        # the level-4 counterclaim and its follow-ups are spoken in the first person, by design
+        pressure_texts = [a[r] for a in sc.bank.values() if a.get("counterclaim") not in ("claim", "followup")
                           for r in ("seer", "villager")] + list(sc.declarations.values())
         for t in pressure_texts:
             self.assertIsNone(FIRST_PERSON.search(t), t)       # reads the same as "Riley:" or "A note appears:"

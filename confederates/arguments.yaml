@@ -201,12 +201,14 @@ arguments:
 
   # ---------- Level 4: counterclaim (DRAFT, pending owner review) ----------
   # One confederate (seeded slot) counterclaims Seer in round 1, in place of
-  # that slot's round-1 argument. In rounds 2 and 3 the counterclaimer keeps
-  # its level-3 line, and the other four slots get the `support` entries below.
-  # Support lines never name the counterclaimer ("the check on Drew", "the
-  # second Seer claim"), so they read the same as notes. The claim itself
-  # uses "I": the one exception to the no-self-reference rule, so in the
-  # no-speaker condition it is an anonymous note claiming Seer.
+  # that slot's round-1 argument, and defends the check in rounds 2 and 3
+  # (`followup`). The other four slots get the `support` entries in rounds
+  # 2 and 3. Support lines never name the counterclaimer ("the check on Drew",
+  # "the second Seer claim"), so they read the same as notes. The claim and
+  # follow-ups use "I": the one exception to the no-self-reference rule, so in
+  # the no-speaker condition they are anonymous notes claiming Seer.
+  # `replaces`: at level 4 this entry takes the named argument's place, because
+  # the original ("Nobody can verify a Seer claim") undercuts the counterclaim.
   - id: cc_claim
     round: 1
     level: 4
@@ -216,6 +218,43 @@ arguments:
       I'm the real Seer. I checked Drew last night: Werewolf.
     villager: >-
       Avery wasn't the Seer. I am. I checked Drew last night: Werewolf.
+
+  - id: cc1_doubt
+    round: 1
+    level: 4
+    counterclaim: replaces
+    replaces: r1_unverifiable
+    point: doubts only the subject's (or Avery's) claim; reads correctly before or after the counterclaim
+    seer: >-
+      Your claim names Morgan, and a fake Seer claim naming the most organized player
+      is exactly how the Werewolf's side would want to play this.
+    villager: >-
+      Avery's claim names Morgan, and a fake Seer claim naming the most organized player
+      is exactly how the Werewolf's side would want to play this.
+
+  - id: cc2_followup
+    round: 2
+    level: 4
+    counterclaim: followup
+    point: the counterclaimer restates the check and says the other claim is the false one
+    seer: >-
+      My check stands: Drew is the Werewolf. One of us is lying about being the Seer,
+      and it isn't the one who checked the quiet player.
+    villager: >-
+      My check stands: Drew is the Werewolf. Avery's message and my check can't both be
+      true, and only one of the two of us is here to answer for it.
+
+  - id: cc3_followup
+    round: 3
+    level: 4
+    counterclaim: followup
+    point: the counterclaimer repeats the check and asks for the vote
+    seer: >-
+      I checked Drew, and Drew is the Werewolf. Vote with the check everyone else talking
+      believes, not the one only you are defending.
+    villager: >-
+      I checked Drew, and Drew is the Werewolf. Vote with the check everyone else talking
+      believes, not a message from a player who can't answer for it.
 
   - id: cc2_fits
     round: 2

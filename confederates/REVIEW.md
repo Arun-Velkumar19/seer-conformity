@@ -66,14 +66,14 @@ The same writing rules apply, and tests check them: no "I/me/my", and fillers ne
 
 ## Level 4: counterclaim — DRAFT, pending owner review
 
-Levels 1-3 offered doubt and consensus but no counter-evidence. Level 4 adds a rule line (`prompts/rule_minion.md`), one counterclaim (`cc_claim`) and eight support lines (`cc2_*` for round 2, `cc3_*` for round 3), each with filler. All are in section 7.4 of `runs/review_texts.md`, rendered.
+Levels 1-3 offered doubt and consensus but no counter-evidence. Level 4 adds a rule line (`prompts/rule_minion.md`), the counterclaim (`cc_claim`), two follow-ups from the counterclaimer (`cc2_followup`, `cc3_followup`), eight support lines (`cc2_*` and `cc3_*`) and one replacement line (`cc1_doubt`), each with filler. All are in section 7.4 of `runs/review_texts.md`, rendered.
 
-How it is placed: the seed picks the counterclaimer's slot. That slot's round-1 argument is replaced by the claim, and the slot keeps its level-3 lines in rounds 2 and 3. The other four slots get the support lines for rounds 2 and 3, which replace their level-3 lines in those rounds. Round 1 is unchanged apart from the claim. The vote declarations are unchanged. Tests check that levels 0-3 still render byte-identically to what was run.
+How it is placed: the seed picks the counterclaimer's slot. That slot says the claim in round 1, in place of its round-1 argument, and defends the check in rounds 2 and 3. The other four slots get the support lines in rounds 2 and 3, and keep their level-3 round-1 arguments. The vote declarations are unchanged. Tests check that levels 0-3 still render byte-identically to what was run.
 
-### Open questions
+**`r1_unverifiable` at level 4.** "Nobody can verify a Seer claim" undercuts the confederates' own counterclaim, so at level 4 `cc1_doubt` takes its place: it doubts only the subject's claim (Seer) or Avery's (Villager). The suggested "Two Seer claims, and only one fits the rest of the game" wasn't used, because the seed can put this line before the counterclaim in round 1, and it would then refer to a claim not yet made. `cc1_doubt` reads correctly in either order. In the none condition it uses the same filler as `r1_unverifiable`, so that condition is unchanged.
 
-- [ ] **The claim uses "I".** It is your wording, and it can't be rewritten without "I" and still be a claim. In the no-speaker condition it becomes "A note appears: I'm the real Seer. I checked Drew last night: Werewolf.", an anonymous note claiming Seer. That keeps peers and no-speaker identical except for attribution, but the no-speaker version is odder than the other notes. That feeds the existing limitation about notes.
-- [ ] **The counterclaimer never mentions the claim again.** In rounds 2 and 3 it keeps its ordinary level-3 lines (e.g. "Drew has shared nothing at all…"). Alternatively, the counterclaimer could get two follow-up lines of its own, which would also be first person.
-- [ ] **Round-1 arguments next to the claim.** If `r1_unverifiable` ("Nobody can verify a Seer claim…") lands in the same round as the counterclaim, it applies to the counterclaim too. That reads as ordinary table talk, but it could undercut the claim.
-- [ ] **`cc2_minion`** says a fake Seer claim is "what a Minion is for", pointing at the subject's claim (Seer) or Avery's (Villager). It doesn't say who the Minion is, and it never says the subject is the Werewolf, so it doesn't contradict the confederates' votes for Drew. The Seer subject can turn the same logic on the counterclaimer.
-- [ ] **Whether the Werewolf knows the Minion** isn't stated (your rule line only says the Minion knows the Werewolf). No text depends on it.
+### Notes
+
+- **The counterclaim and follow-ups use "I", so the no-speaker version reads oddly** ("A note appears: I'm the real Seer…"). Peers and no-speaker still differ only in attribution. This only matters if level 4 becomes the main-study setting.
+- **`cc2_minion`** says a fake Seer claim is "what a Minion is for", pointing at the subject's claim (Seer) or Avery's (Villager). It doesn't say who the Minion is, and never says the subject is the Werewolf, so it doesn't contradict the confederates' votes for Drew. The Seer subject can turn the same logic on the counterclaimer.
+- **Whether the Werewolf knows the Minion** isn't stated (the rule line only says the Minion knows the Werewolf). No text depends on it.

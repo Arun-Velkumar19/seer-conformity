@@ -165,14 +165,19 @@ def calibration(spike_cfg: dict) -> list[str]:
         "### 7.4 Level 4: counterclaim\n\n"
         "Levels 1-3 hold because the confederates offer only doubt and consensus, no counter-evidence. Level 4 "
         "adds one rule line, and a confederate in a seeded slot counterclaims Seer in round 1, in place of that "
-        "slot's round-1 argument. In rounds 2 and 3, the counterclaimer keeps its level-3 line and the other four "
-        "confederates back the claim. Support lines never name the counterclaimer, so they read the same as "
-        "notes. The claim is the one text spoken in the first person, so in the no-speaker condition it is an "
-        "anonymous note claiming Seer.",
+        "slot's round-1 argument. In rounds 2 and 3 the counterclaimer defends the check, and the other four "
+        "confederates back it. Support lines never name the counterclaimer, so they read the same as notes. "
+        "The claim and follow-ups are the only first-person texts, so in the no-speaker condition they are "
+        "anonymous notes claiming Seer. `r1_unverifiable` (\"Nobody can verify a Seer claim\") would undercut "
+        "the counterclaim, so at level 4 `cc1_doubt` takes its place.",
         "**Rule line added to the system prompt** (after the Seer line; everything else is unchanged):\n\n"
         + quote(s4.minion_rule),
     ]
     o.append(argument_entry(s4, s4.claim_id))
+    o.append("Counterclaimer follow-ups, rounds 2 and 3:")
+    o += [argument_entry(s4, i) for r in (2, 3) for i in s4._cc_ids(r, "followup")]
+    o.append("Replacement for `r1_unverifiable` at level 4 (same filler as the line it stands in for):")
+    o += [argument_entry(s4, i) for i in s4._cc_ids(1, "replaces")]
     o.append("Support lines, rounds 2 and 3:")
     o += [argument_entry(s4, i) for r in (2, 3) for i in s4.support_ids(r)]
     o.append(f"Full step messages at level 4, Seer · public · peers, seed {EXAMPLE_SEED} "
