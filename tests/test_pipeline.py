@@ -107,7 +107,7 @@ class DryRunPipelineTests(unittest.TestCase):
             self.assertGreater(sum(r["reminders"] for r in recs), 0)
             self.assertEqual(summarize.fidelity_problems(CFG, SC.no_speaker_prefix, recs), [])
             for r in recs:
-                self.assertEqual(r["effort"], "medium")
+                self.assertEqual(r["effort"], "low")
                 self.assertEqual(len(user_texts(r)), 4)
 
     def test_dry_run_is_deterministic(self):
@@ -214,6 +214,67 @@ class ProviderShapeTests(unittest.TestCase):
         # user, reasoning and function_call echoed back unchanged, then the output, then the next user turn
         self.assertEqual(types, ["user", "reasoning", "function_call", "function_call_output", "user"])
         self.assertEqual(r2["input"][3]["call_id"], t1.tool_calls[0].id)
+
+
+def _bad_request(message: str, param: str | None):
+    import httpx2
+    import openai
+    resp = httpx2.Response(400, request=httpx2.Request("POST", "https://api.invalid/v1/responses"))
+    return openai.BadRequestError(message, response=resp, body={"message": message, "param": param, "type": "invalid_request_error"})
+
+
+class RejectsReasoning(StubOpenAI):
+    """Stub whose model rejects any request carrying reasoning settings."""
+    def __init__(self, param="reasoning.effort", msg="Unsupported parameter: 'reasoning.effort' is not supported with this model."):
+        super().__init__()
+        self.param, self.msg, self.rejected = param, msg, 0
+
+    def create(self, **kw):
+        if "reasoning" in kw:
+            self.rejected += 1
+            raise _bad_request(self.msg, self.param)
+        return super().create(**kw)
+
+
+class EffortFallbackTests(unittest.TestCase):
+    def test_luna_config_requests_low_and_allows_omission(self):
+        reg = __import__("yaml").safe_load((Path(__file__).resolve().parent.parent / "configs/models.yaml").read_text())["models"]
+        self.assertTrue(all(m["effort"] == "low" for m in reg.values()))
+        self.assertTrue(reg["gpt-6-luna"].get("omit_effort_if_rejected"))
+        self.assertFalse(any(m.get("omit_effort_if_rejected") for k, m in reg.items() if k != "gpt-6-luna"))
+
+    def test_rejected_effort_is_dropped_and_logged(self):
+        client = RejectsReasoning()
+        s = OpenAISession(client, {**SPEC, "omit_effort_if_rejected": True}, "SYS", TOOLS)
+        s.send([{"type": "text", "text": "vote"}], "auto")
+        s.send([{"type": "text", "text": "again"}], "auto")
+        self.assertEqual(client.rejected, 1)                  # only the first request was refused
+        self.assertIsNone(s.effort_sent)
+        self.assertIn("rejected by API", s.effort_note)
+        for r in client.requests:                             # every accepted request carried no reasoning
+            self.assertNotIn("reasoning", r)
+            self.assertNotIn("include", r)
+
+    def test_without_flag_rejection_is_an_error(self):
+        from sim.providers import ProviderError
+        s = OpenAISession(RejectsReasoning(), SPEC, "SYS", TOOLS)
+        with self.assertRaises(ProviderError):
+            s.send([{"type": "text", "text": "vote"}], "auto")
+
+    def test_unrelated_bad_request_is_not_swallowed(self):
+        from sim.providers import ProviderError
+        client = RejectsReasoning(param="tools", msg="Invalid tool schema.")
+        s = OpenAISession(client, {**SPEC, "omit_effort_if_rejected": True}, "SYS", TOOLS)
+        with self.assertRaises(ProviderError):
+            s.send([{"type": "text", "text": "vote"}], "auto")
+        self.assertEqual(s.effort_sent, "low")
+
+    def test_effort_logged_in_records(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "dry.jsonl"
+            run_all(CFG, out, dry_run=True, limit=3)
+            for r in load_records(out):
+                self.assertEqual((r["effort"], r["effort_sent"], r["effort_note"]), ("low", "low", None))
 
 
 if __name__ == "__main__":

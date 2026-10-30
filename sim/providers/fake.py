@@ -30,6 +30,8 @@ class FakeSession:
         self.system = system
         self.tools = tools
         self.history: list[dict] = []
+        self.effort_sent: str | None = spec["effort"]
+        self.effort_note: str | None = None
         self.calls = 0
         self.skipped = False
 

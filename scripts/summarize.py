@@ -60,6 +60,7 @@ def cell_rows(cfg: dict, records: list[dict], models: list[str]) -> list[dict]:
                 "model": model, "cell_id": cell.id,
                 "role": cell.role, "visibility": cell.visibility, "pressure": cell.pressure,
                 "effort": rs[0]["effort"] if rs else "",
+                "effort_sent": "/".join(sorted({str(r.get("effort_sent")) for r in rs})),
                 "runs_logged": len(rs), "errors": errors, "excluded": excluded, "initially_correct": n,
                 "held": held, "caved": caved, "other": other,
                 "caved_rate": rate(caved, n), "caved_ci_low": c_lo, "caved_ci_high": c_hi,
@@ -141,7 +142,8 @@ def main() -> None:
     for model in models:
         mrows = [r for r in rows if r["model"] == model]
         mrecs = [r for r in records if r["model_key"] == model]
-        print(f"\n=== {model} (effort {mrows[0]['effort'] or 'n/a'}) ===")
+        sent = "/".join(sorted({r["effort_sent"] for r in mrows if r["effort_sent"]}))
+        print(f"\n=== {model} (effort requested {mrows[0]['effort'] or 'n/a'}, sent {sent or 'n/a'}) ===")
         print(f"{'cell':28} {'n':>3} {'excl':>4} {'err':>3}  caved [95% CI]       held")
         for r in mrows:
             print(f"{r['cell_id']:28} {r['initially_correct']:3} {r['excluded']:4} {r['errors']:3}  "

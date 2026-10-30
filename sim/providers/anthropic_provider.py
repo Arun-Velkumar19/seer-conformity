@@ -33,6 +33,8 @@ class AnthropicSession:
             for t in tools
         ]
         self.history: list[dict] = []
+        self.effort_sent: str | None = spec["effort"]
+        self.effort_note: str | None = None
 
     def send(self, items: list[dict], tool_mode: str) -> Turn:
         content = []

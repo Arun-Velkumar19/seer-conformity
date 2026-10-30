@@ -42,7 +42,7 @@ def render_turn(m: dict) -> list[str]:
 def render(r: dict, show_system: bool) -> str:
     head = (f"## {r['model_key']} · {r['cell_id']} · run {r['run_index']} · seed {r['seed']} · "
             f"outcome **{r['outcome']}**\n\n"
-            f"{r['provider']} `{r['model']}`, effort {r['effort']}"
+            f"{r['provider']} `{r['model']}`, effort {r['effort']} (sent: {r.get('effort_sent')})"
             f"{' (DRY RUN, fake model)' if r.get('dry_run') else ''}. Private vote: "
             f"{(r['private_initial_vote'] or {}).get('target')}; final vote: {(r['final_vote'] or {}).get('target')}"
             f"{'; error: ' + r['error'] if r['error'] else ''}.")

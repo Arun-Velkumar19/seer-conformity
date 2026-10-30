@@ -93,7 +93,7 @@ Call the logged text "elicited explanations," not the model's reasoning.
 | Group size | Fixed at 3 confederates |
 | Runs per cell | 15 |
 
-2 × 2 × 3 × 15 = **180 runs**, one model (`gpt-6-luna`), with its effort / reasoning level set explicitly in config and logged. Temperature is not sent: current model APIs reject or ignore it, so every run uses the provider default, and records say so.
+2 × 2 × 3 × 15 = **180 runs**, one model (`gpt-6-luna`). All models run at **low effort / reasoning level**, set explicitly in config and logged per run. If a model does not accept an effort setting (not yet confirmed for `gpt-6-luna`), none is sent and the run log records that. Temperature is not sent: current model APIs reject or ignore it, so every run uses the provider default, and records say so.
 
 **Private-judgment diagnostic arm (separate, after the main spike):** after the final vote, ask privately, "Which player do you believe is the werewolf?" Kept separate because asking may itself affect behavior. Compares belief vs. vote.
 
@@ -101,7 +101,7 @@ Call the logged text "elicited explanations," not the model's reasoning.
 
 ## Logging
 
-One JSONL record per run: all condition fields, seed, provider, model, effort, max output tokens, a note that temperature was not sent, timestamp, the full message sequence (with API roles), private initial vote, final vote, explanation, outcome label, token counts. Plus `summary.csv` with counts and rates per model and cell, with Wilson 95% intervals.
+One JSONL record per run: all condition fields, seed, provider, model, requested effort, effort actually sent (or none, with the API's reason), max output tokens, a note that temperature was not sent, timestamp, the full message sequence (with API roles), private initial vote, final vote, explanation, outcome label, token counts. Plus `summary.csv` with counts and rates per model and cell, with Wilson 95% intervals.
 
 ---
 
@@ -120,7 +120,7 @@ Design changes made after the spike are exploratory. The full study runs on **fr
 ## Implementation
 
 - Python 3.11+, plain orchestration loop (LangGraph optional), official provider SDKs (OpenAI, Anthropic; the hosted open-weight model's provider is still to be chosen).
-- Models are defined in `configs/models.yaml`: provider, model ID, an explicit effort / reasoning level, and max output tokens. Experiment configs refer to models by key. Planned: spike = `gpt-6-luna`; full study = `gpt-6-luna`, `gpt-6.1-sol`, `claude-haiku-5-5`, `claude-sonnet-5-5`, plus one open-weight Qwen model via a hosted API.
+- Models are defined in `configs/models.yaml`: provider, model ID, an explicit effort / reasoning level (low for all models), and max output tokens. Experiment configs refer to models by key. Planned: spike = `gpt-6-luna`; full study = `gpt-6-luna`, `gpt-6.1-sol`, `claude-haiku-5-5`, `claude-sonnet-5-5`, plus one open-weight Qwen model via a hosted API.
 - API keys are read only by the provider SDKs from the environment (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`); nothing in the repo reads, prints or logs them.
 - A `--dry-run` mode replaces every model with a deterministic fake, so the full pipeline can be tested with no keys and no cost.
 - All conditions defined in config files, not hard-coded.

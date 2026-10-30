@@ -28,7 +28,7 @@ from .providers import ProviderError, open_session
 from .scenario import Scenario, Step
 from .tools import vote_tools
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 TEMPERATURE_NOTE = "not sent (provider default)"
 REMINDER = "Please record your vote now using the {tool} tool."
 
@@ -123,7 +123,9 @@ class Trial:
             "model_key": self.spec["key"],
             "provider": self.spec["provider"],
             "model": self.spec["model"],
-            "effort": self.spec["effort"],
+            "effort": self.spec["effort"],           # requested in config
+            "effort_sent": self.session.effort_sent,  # what the API actually got (None = not sent)
+            "effort_note": self.session.effort_note,
             "max_output_tokens": self.spec["max_output_tokens"],
             "temperature": TEMPERATURE_NOTE,
             "cell_id": self.cell.id,

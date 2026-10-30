@@ -3,6 +3,11 @@
 Effort goes in reasoning.effort. Nothing is stored server-side (store=False);
 reasoning items come back encrypted and are sent back unchanged with the rest
 of the output, so the conversation is append-only. Temperature is not sent.
+
+If the model spec sets omit_effort_if_rejected and the API rejects the
+reasoning settings, the request is retried once without them, and the session
+keeps sending none; effort_sent becomes None and effort_note keeps the API's
+message for the run log.
 """
 
 from __future__ import annotations
@@ -19,6 +24,14 @@ def make_client():
     return openai.OpenAI(max_retries=5)
 
 
+def _rejects_reasoning(e) -> bool:
+    """True if a 400 is about the reasoning settings (reasoning.effort or the
+    encrypted-reasoning include), not some other problem."""
+    param = (getattr(e, "param", None) or "").lower()
+    msg = (getattr(e, "message", None) or str(e)).lower()
+    return param.startswith("reasoning") or param == "include" or "reasoning" in msg
+
+
 class OpenAISession:
     def __init__(self, client, spec: dict, system: str, tools: list[dict]):
         self.client = client
@@ -30,6 +43,24 @@ class OpenAISession:
             for t in tools
         ]
         self.items: list[dict] = []   # full input list, native format
+        self.effort_sent: str | None = spec["effort"]
+        self.effort_note: str | None = None
+
+    def _create(self, tool_mode: str):
+        kwargs = dict(
+            model=self.spec["model"],
+            instructions=self.system,
+            input=self.items,
+            tools=self.tools,
+            tool_choice="auto" if tool_mode == "auto" else "none",
+            parallel_tool_calls=False,
+            max_output_tokens=self.spec["max_output_tokens"],
+            store=False,
+        )
+        if self.effort_sent is not None:
+            kwargs["reasoning"] = {"effort": self.effort_sent}
+            kwargs["include"] = ["reasoning.encrypted_content"]
+        return self.client.responses.create(**kwargs)
 
     def send(self, items: list[dict], tool_mode: str) -> Turn:
         user_text = []
@@ -41,18 +72,15 @@ class OpenAISession:
         if user_text:
             self.items.append({"role": "user", "content": user_text})
         try:
-            resp = self.client.responses.create(
-                model=self.spec["model"],
-                instructions=self.system,
-                input=self.items,
-                tools=self.tools,
-                tool_choice="auto" if tool_mode == "auto" else "none",
-                parallel_tool_calls=False,
-                reasoning={"effort": self.spec["effort"]},
-                max_output_tokens=self.spec["max_output_tokens"],
-                store=False,
-                include=["reasoning.encrypted_content"],
-            )
+            try:
+                resp = self._create(tool_mode)
+            except openai.BadRequestError as e:
+                if not (self.spec.get("omit_effort_if_rejected") and self.effort_sent is not None
+                        and _rejects_reasoning(e)):
+                    raise
+                self.effort_sent = None
+                self.effort_note = f"effort {self.spec['effort']!r} rejected by API, sent none: {e.message}"[:500]
+                resp = self._create(tool_mode)
         except openai.APIError as e:
             raise ProviderError(f"{type(e).__name__}: {e}") from e
         self.items.extend(o.model_dump(mode="json", exclude_none=True) for o in resp.output)

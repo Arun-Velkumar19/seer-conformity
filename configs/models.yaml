@@ -1,8 +1,9 @@
 # Model registry. Experiment configs refer to models by these keys.
 #
-# Every entry sets its effort / reasoning level explicitly; it is logged with
-# every run. Temperature is never sent (current APIs reject or ignore it for
-# these models), and records say so.
+# Every entry sets its effort / reasoning level explicitly (all low); the
+# requested and actually sent effort are logged with every run. Temperature is
+# never sent (current APIs reject or ignore it for these models), and records
+# say so.
 #
 # API keys are read by each provider's SDK from the environment
 # (OPENAI_API_KEY, ANTHROPIC_API_KEY). Nothing in this repo reads them.
@@ -11,25 +12,29 @@ models:
   gpt-6-luna:
     provider: openai          # Responses API; effort -> reasoning.effort
     model: gpt-6-luna
-    effort: medium
+    effort: low
+    # Not yet confirmed that gpt-6-luna accepts a reasoning effort. If the API
+    # rejects it, the run continues with no effort (and no reasoning items) and
+    # the record logs effort_sent: null with the API's message.
+    omit_effort_if_rejected: true
     max_output_tokens: 16000
 
   gpt-6.1-sol:
     provider: openai
     model: gpt-6.1-sol
-    effort: medium
+    effort: low
     max_output_tokens: 16000
 
   claude-haiku-5-5:
     provider: anthropic       # Messages API; effort -> output_config.effort
     model: claude-haiku-5-5
-    effort: medium
+    effort: low
     max_output_tokens: 16000
 
   claude-sonnet-5-5:
     provider: anthropic
     model: claude-sonnet-5-5
-    effort: medium
+    effort: low
     max_output_tokens: 16000
 
   # Open-weight model via a hosted API: placeholder until the provider, endpoint
