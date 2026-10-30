@@ -312,11 +312,13 @@ LEVEL_SC = {lv: Scenario(c) for lv, c in LEVEL_CFG.items()}
 # sha256 of every level-0 system prompt, step message and the vote-tool schema, taken
 # from the code that produced runs/spike-v2.jsonl (commit 9ce1a6b).
 LEVEL0_FINGERPRINT = "045a3c9a3e7077e28800712966df917230d8e10308c50a7865cc932e51287046"
-# The same for levels 1-3, from the code that produced the calibration runs (commit 00652ff).
+# The same for levels 1-4 over the first 15 seeds, from the code that produced the
+# calibration runs (levels 1-3: commit 00652ff; level 4: commit 8a244ef).
 CALIBRATION_FINGERPRINTS = {
     1: "c1d116cbd4f8456f4e92ea8e71730232481d4979c424b3a4d36cefe190669f1b",
     2: "523f3dafbe0f72da102fdabb409ffe41188c584ead7997ad64ac62c20b92f081",
     3: "e20fecd355537a15cb1faef2cb2565d0a66956f9055f97bc06a5c3ab7db1d013",
+    4: "b275f80fc20783de27e0470409df63a06314a292b87013667ff483e51b6526c6",
 }
 MINION_LINE = "- **1** player is secretly the **Minion**, on the Werewolf's team. The Minion knows who the Werewolf is but is not a Werewolf."
 FIRST_PERSON = re.compile(r"\b(I|I'm|I've|I'd|I'll|me|my|mine|myself)\b")
@@ -331,15 +333,21 @@ class CalibrationLevelTests(unittest.TestCase):
     def _fingerprint(lv: int) -> str:
         sc, cfg = LEVEL_SC[lv], LEVEL_CFG[lv]
         blob = [[c.id, s, sc.system_prompt(c), [[st.name, st.text, st.tool] for st in sc.steps(c, s)]]
-                for c, s in itertools.product(cells(cfg), cfg["seeds"])]
+                for c, s in itertools.product(cells(cfg), cfg["seeds"][:15])]
         blob.append(vote_tools(sc.candidates))
         return hashlib.sha256(json.dumps(blob).encode()).hexdigest()
 
     def test_level0_is_the_spike_byte_for_byte(self):
         self.assertEqual(self._fingerprint(0), LEVEL0_FINGERPRINT)
 
-    def test_levels_1_to_3_unchanged_since_they_were_run(self):
-        self.assertEqual({lv: self._fingerprint(lv) for lv in (1, 2, 3)}, CALIBRATION_FINGERPRINTS)
+    def test_calibration_levels_unchanged_since_they_were_run(self):
+        self.assertEqual({lv: self._fingerprint(lv) for lv in (1, 2, 3, 4)}, CALIBRATION_FINGERPRINTS)
+
+    def test_calibration_seeds(self):
+        seeds = LEVEL_CFG[4]["seeds"]
+        self.assertEqual(len(seeds), 30)
+        self.assertEqual(len(set(seeds)), 30)
+        self.assertEqual(seeds[:15], CFG["seeds"])          # runs 0-14 keep the spike's seeds
 
     def test_levels_are_cumulative(self):
         got = {lv: (len(sc.confederates), sc.level["vote_declarations"], sc.n_rounds, sc.level["counterclaim"])
@@ -367,6 +375,28 @@ class CalibrationLevelTests(unittest.TestCase):
                     mod = {p: summarize.moderator_text([st[p][k].text], sc.confederates, sc.no_speaker_prefix)
                            for p in PRESSURES}
                     self.assertEqual(len({json.dumps(m) for m in mod.values()}), 1, (lv, role, vis, seed, k))
+
+    def test_public_and_secret_differ_only_in_the_announcement(self):
+        for lv, sc in LEVEL_SC.items():
+            for role, p, seed in itertools.product(["seer", "villager"], PRESSURES, LEVEL_CFG[lv]["seeds"]):
+                pub, sec = (Cell(role, v, p) for v in ("public", "secret"))
+                self.assertEqual(sc.system_prompt(pub), sc.system_prompt(sec))
+                a = [s.text.replace(sc.visibility["public"].strip(), "{v}") for s in sc.steps(pub, seed)]
+                b = [s.text.replace(sc.visibility["secret"].strip(), "{v}") for s in sc.steps(sec, seed)]
+                self.assertEqual(a, b, (lv, role, p, seed))
+                self.assertEqual(sum("{v}" in t for t in a), 1)
+
+    def test_visibility_check_catches_drift(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "calibration.jsonl"
+            cfg = {**LEVEL_CFG[4], "runs_per_cell": 3}
+            run_all(cfg, out, dry_run=True, workers=8, cell_ids=["seer-public-peers", "seer-secret-peers"])
+            recs = load_records(out)
+            self.assertEqual(summarize.visibility_problems(cfg, recs), [])
+            victim = next(r for r in recs if r["visibility"] == "secret")
+            item = victim["transcript"][6]["items"][0]
+            item["text"] = item["text"].replace("Drew", "Drew!", 1)
+            self.assertTrue(summarize.visibility_problems(cfg, recs))
 
     def test_pressure_content_is_the_same_under_both_visibilities(self):
         for lv, sc in LEVEL_SC.items():
@@ -553,6 +583,30 @@ class CalibrationRunTests(unittest.TestCase):
             self.assertIsNotNone(run_spike.protected_problem(LEVEL_CFG[lv], spike))
             self.assertEqual(run_spike.records_path(LEVEL_CFG[lv], False).name, "calibration.jsonl")
             self.assertIsNone(run_spike.protected_problem(LEVEL_CFG[lv], run_spike.records_path(LEVEL_CFG[lv], False)))
+
+    def test_runs_override(self):
+        cfg = load_config("configs/calibration.yaml", 4)
+        self.assertEqual(cfg["runs_per_cell"], 10)          # default unchanged
+        run_spike.set_runs(cfg, 30)
+        self.assertEqual(cfg["runs_per_cell"], 30)
+        with self.assertRaisesRegex(ValueError, "between 1 and 30"):
+            run_spike.set_runs(cfg, 31)
+
+    def test_raising_runs_only_adds_new_indexes(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "calibration.jsonl"
+            cfg = load_config("configs/calibration.yaml", 4)
+            first = run_all(cfg, out, dry_run=True, workers=8, cell_ids=self.PAIR)
+            run_spike.set_runs(cfg, 30)
+            more = run_all(cfg, out, dry_run=True, workers=8, cell_ids=self.PAIR + ["seer-secret-peers"])
+            self.assertEqual(sorted({r["run_index"] for r in first}), list(range(10)))
+            self.assertEqual(len(more), 2 * 20 + 30)
+            recs = load_records(out)
+            keys = [(r["cell_id"], r["run_index"]) for r in recs]
+            self.assertEqual(len(keys), len(set(keys)))
+            self.assertEqual(len(recs), 90)
+            with open(out) as f:
+                self.assertEqual(sum(1 for _ in f), 90)        # nothing logged twice
 
     def test_parse_cells(self):
         self.assertEqual(run_spike.parse_cells(CFG, ["seer-public-peers,villager-public-peers"]), self.PAIR)

@@ -132,6 +132,28 @@ def fidelity_problems(cfg: dict, prefix: str, records: list[dict]) -> list[str]:
         moderator = {p: moderator_text(t, speakers, prefix) for p, t in by_p.items()}
         if len({json.dumps(m) for m in moderator.values()}) > 1:
             problems.append(f"{key}: moderator text differs across pressure levels")
+    return problems + visibility_problems(cfg, records)
+
+
+def visibility_problems(cfg: dict, records: list[dict]) -> list[str]:
+    """For each (model, pressure level, role, pressure, seed), the public and secret runs
+    must show the subject identical system prompts and messages except for the
+    visibility announcement itself."""
+    announcements = Scenario(cfg).visibility
+    groups = defaultdict(dict)
+    for r in records:
+        if r["outcome"] != labeling.ERROR:
+            key = (r["model_key"], level_of(r), r["role"], r["pressure"], r["seed"])
+            texts = [t.replace(announcements[r["visibility"]].strip(), "{visibility}") for t in user_texts(r)]
+            groups[key][r["visibility"]] = (r["system_prompt"], texts,
+                                            sum(t != u for t, u in zip(texts, user_texts(r))))
+    problems = []
+    for key, by_v in sorted(groups.items()):
+        for v, (_, _, n) in by_v.items():
+            if n != 1:
+                problems.append(f"{key}: {v} announcement appears in {n} messages, expected 1")
+        if len(by_v) == 2 and len({json.dumps(x[:2]) for x in by_v.values()}) > 1:
+            problems.append(f"{key}: public and secret differ beyond the visibility announcement")
     return problems
 
 
@@ -195,8 +217,11 @@ def main() -> None:
         print(f"  1. initial correctness (Seer): {correct}/{voted} = {fmt(ic)}  "
               f"{'OK' if voted and ic >= 0.95 else 'BELOW 0.95: fix the setup' if voted else 'no Seer runs'}")
         problems = fidelity_problems(cfg, prefix, mrecs)
+        pairs = len({(r["role"], r["pressure"], r["seed"]) for r in mrecs if r["visibility"] == "public"}
+                    & {(r["role"], r["pressure"], r["seed"]) for r in mrecs if r["visibility"] == "secret"})
         print(f"  2. manipulation fidelity: {'OK' if not problems else f'{len(problems)} problem(s)'}"
-              f"{'' if any(r['pressure'] != 'peers' for r in mrecs) else ' (peers only: nothing to compare)'}")
+              f"{'' if any(r['pressure'] != 'peers' for r in mrecs) else ' (peers only: no pressure conditions to compare)'}"
+              f"; {pairs} seed-matched public/secret pairs checked")
         for p in problems[:10]:
             print(f"       {p}")
         print("  3. plausibility: human read of 10 peer transcripts (scripts/sample_transcripts.py)")

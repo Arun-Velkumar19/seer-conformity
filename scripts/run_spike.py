@@ -10,8 +10,14 @@ Calibration (exploratory; higher pressure levels, runs/calibration.jsonl):
 
     python scripts/run_spike.py --config configs/calibration.yaml --pressure-level 1 \
         --cells seer-public-peers,villager-public-peers
+    python scripts/run_spike.py --config configs/calibration.yaml --pressure-level 4 --runs 30 \
+        --cells seer-public-peers,seer-secret-peers
     python scripts/run_spike.py --config configs/calibration.yaml --pressure-level 3 \
         --show-prompts --cell seer-public-peers
+
+--runs N overrides the config's runs per cell. Runs already logged (same model,
+pressure level, cell and run index) are skipped, so raising N only adds the new
+run indexes.
 
 Real runs append to runs/<name>.jsonl and resume if interrupted (errored runs
 are retried). Dry runs write runs/<name>.dryrun.jsonl. Models, effort and
@@ -47,6 +53,12 @@ def protected_problem(cfg: dict, out: Path) -> str | None:
     return None
 
 
+def set_runs(cfg: dict, n: int) -> None:
+    if not 1 <= n <= len(cfg["seeds"]):
+        raise ValueError(f"--runs must be between 1 and {len(cfg['seeds'])} (the number of seeds in the config)")
+    cfg["runs_per_cell"] = n
+
+
 def parse_cells(cfg: dict, values: list[str] | None) -> list[str] | None:
     if not values:
         return None
@@ -80,7 +92,8 @@ def main() -> None:
     ap.add_argument("--out", help="JSONL output path (overrides the default)")
     ap.add_argument("--workers", type=int, default=4, help="concurrent trials")
     ap.add_argument("--limit", type=int, help="run at most this many pending trials")
-    ap.add_argument("--pressure-level", type=int, help="override the config's pressure level (0-3)")
+    ap.add_argument("--pressure-level", type=int, help="override the config's pressure level (0-4)")
+    ap.add_argument("--runs", type=int, help="runs per cell, overriding the config (run i uses seeds[i])")
     ap.add_argument("--cells", action="append",
                     help="only these cell ids, comma-separated or repeated, e.g. seer-public-peers,villager-public-peers")
     ap.add_argument("--show-prompts", action="store_true", help="print one cell's rendered prompts and exit")
@@ -91,6 +104,8 @@ def main() -> None:
     try:
         cfg = load_config(args.config, args.pressure_level)
         cell_ids = parse_cells(cfg, args.cells)
+        if args.runs is not None:
+            set_runs(cfg, args.runs)
     except ValueError as e:
         ap.error(str(e))
     if args.show_prompts:

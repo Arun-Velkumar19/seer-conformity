@@ -58,7 +58,7 @@ Calibration (exploratory; the spike hit a floor of 0 caves in 180 runs): pressur
 python scripts/run_spike.py --config configs/calibration.yaml --pressure-level 1 --cells seer-public-peers,villager-public-peers
 ```
 
-`python scripts/summarize.py --config configs/calibration.yaml` summarizes each level separately into `runs/calibration_summary.csv`.
+`--runs N` overrides the 10 runs per cell (up to 30); runs already logged are kept and only new run indexes are added. `python scripts/summarize.py --config configs/calibration.yaml` summarizes each level separately into `runs/calibration_summary.csv`.
 
 ## Repository layout
 

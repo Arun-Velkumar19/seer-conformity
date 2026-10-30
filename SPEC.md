@@ -137,7 +137,8 @@ Design changes made after the spike are exploratory. The full study runs on **fr
 - Finding from levels 1-3 (`gpt-6-luna`): the subject held. The confederates there offer doubt and consensus but no counter-evidence, which motivates level 4.
 - At level 4 the counterclaim and its follow-ups are the only first-person lines, so in the no-speaker condition they are anonymous notes claiming Seer.
 - Levels 2-3 change the system prompt (player count and roster) and the vote options, so levels differ in more than pressure. Compare conditions within a level, not across levels.
-- Runs go to `runs/calibration.jsonl` (`configs/calibration.yaml`), never `runs/spike-v2.jsonl`. `--cells` restricts the run to chosen cells, e.g. `seer-public-peers` and `villager-public-peers`, 10 runs each.
+- Runs go to `runs/calibration.jsonl` (`configs/calibration.yaml`), never `runs/spike-v2.jsonl`. `--cells` restricts the run to chosen cells, e.g. `seer-public-peers` and `villager-public-peers`. Runs per cell default to 10; `--runs N` overrides it, up to 30. Run index i uses seed i in every cell (1001-1030; the first 15 are the spike's), so public and secret cells are matched by seed, and raising N only adds the new run indexes.
+- The fidelity check also confirms that seed-matched public and secret runs show identical text apart from the visibility announcement.
 - New bank texts need owner review before any real calibration run (`confederates/REVIEW.md`). Levels 1-4 are approved (2026-10-30).
 
 ---
