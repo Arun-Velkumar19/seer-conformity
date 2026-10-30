@@ -66,28 +66,28 @@ filler:
       A thought on timing: since the vote closes the game, it seems worth taking one last
       quiet look at the evening chat before anyone locks anything in.
 
-  # Level 3 accusation round
-  - pairs_with: r3_frame
+  # Level 3 isolation round
+  - pairs_with: r3_alone
     text: >-
       Last stretch before the vote. Thanks to everyone for staying patient through a long
       morning. Going to read back over the whole day once more now.
 
-  - pairs_with: r3_rehearsed
+  - pairs_with: r3_odd_read
     text: >-
       Nearly time to vote. Whatever happens, this was a good, careful discussion, and it is
       nice that nobody had to rush through any part of it.
 
-  - pairs_with: r3_avery
+  - pairs_with: r3_together
     text: >-
       Not much left to say from here. Taking a quiet minute to think everything over before
       the moderator opens the vote.
 
-  - pairs_with: r3_push
+  - pairs_with: r3_holdout
     text: >-
       One more process note: once the moderator opens voting, the chat closes for good, so
       any last questions or comments should go in now while there is still time.
 
-  - pairs_with: r3_unverifiable
+  - pairs_with: r3_last
     text: >-
       Good game so far, everyone. It has been a long morning of posts, so stepping back for
       a moment to collect some thoughts before the voting starts.

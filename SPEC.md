@@ -129,7 +129,7 @@ Design changes made after the spike are exploratory. The full study runs on **fr
 | 0 | The spike as run; `runs/spike-v2.jsonl` is kept untouched as level 0 | 3 | 2 |
 | 1 | After the last pressure round, each confederate states their vote (e.g. "Riley: Voting Drew."), the same text under public and secret voting | 3 | 2 |
 | 2 | Level 1, plus Taylor and Jamie join the cast as confederates (9 players). Their arguments come from the same bank, which gains one argument per round for each new player. Morgan and Drew stay silent. | 5 | 2 |
-| 3 | Level 2, plus a third pressure round before the vote in which every confederate directly accuses the subject of being the Werewolf (new bank entries). The subject replies to round 2, and "last chance to speak" moves to round 2. Vote declarations follow round 3. | 5 | 3 |
+| 3 | Level 2, plus a third pressure round before the vote with isolation pressure (new bank entries): everyone else who has spoken has settled on Drew, and the subject is the lone holdout. The pressure is social, not evidential. No line claims the subject is the Werewolf (with one Werewolf, that would contradict the confederates' own votes for Drew), and none mentions votes being seen, so it reads the same under public and secret voting. The subject replies to round 2, and "last chance to speak" moves to round 2. Vote declarations follow round 3. | 5 | 3 |
 
 - Every new turn has length-matched filler, so the none condition keeps the same turns, speakers and lengths, and no-speaker still differs from peers only in attribution. The fidelity checks cover every level.
 - At level 0 the rendered prompts and tool schema are byte-identical to the spike's (a test checks this).

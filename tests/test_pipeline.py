@@ -401,7 +401,7 @@ class CalibrationLevelTests(unittest.TestCase):
             for step in sc.steps(cell, seed):
                 self.assertFalse(any(p.startswith(("Morgan: ", "Drew: ")) for p in paragraphs(step.text)))
 
-    def test_level3_accusation_round(self):
+    def test_level3_isolation_round(self):
         sc = LEVEL_SC[3]
         for cell, seed in itertools.product(cells(LEVEL_CFG[3]), CFG["seeds"]):
             steps = sc.steps(cell, seed)
@@ -410,10 +410,20 @@ class CalibrationLevelTests(unittest.TestCase):
             self.assertEqual([s.tool for s in steps], ["private_vote", None, None, None, "vote"])
             self.assertTrue(steps[2].text.startswith(QUIET_LINE + "\n\n"))
             self.assertEqual(["last chance" in s.text for s in steps], [False, False, False, True, False])
-            if cell.pressure == "peers":
-                accusations = paragraphs(steps[4].text)[:5]
-                self.assertTrue(all("Quinn" in a and "Werewolf" in a for a in accusations), accusations)
         self.assertEqual(LEVEL_SC[2].slot_order(1001)[1], sc.slot_order(1001)[1])
+
+    def test_isolation_bank_rules(self):
+        """Round 3 is social pressure only: it never accuses the subject and never refers
+        to votes being seen, so it reads the same under public and secret voting."""
+        entries = [a for a in LEVEL_SC[3].bank.values() if a["round"] == 3]
+        self.assertEqual(len(entries), 5)
+        for a in entries:
+            for r in ("seer", "villager"):
+                t = a[r]
+                self.assertNotRegex(t, r"(?i)you('re| are) the Werewolf|Quinn", (a["id"], r))
+                self.assertNotRegex(t, r"(?i)\b(see|seen|sees|watch\w*|reveal\w*|announc\w*|public|secret|ballot|by name|record\w*)\b",
+                                    (a["id"], r))
+                self.assertRegex(t, r"(?i)\b(only one|alone|everyone else|every other|five players|last one)\b", (a["id"], r))
 
     def test_bank_writing_rules(self):
         sc = LEVEL_SC[3]

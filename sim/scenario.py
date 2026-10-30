@@ -60,7 +60,7 @@ class Scenario:
         self.candidates = sc["candidates"]
         self.pressure_level = cfg["pressure_level"]
         self.level = cfg["level"]
-        self.n_rounds = 3 if self.level["accusation_round"] else 2
+        self.n_rounds = 3 if self.level["isolation_round"] else 2
 
         self.rules = _COMMENT.sub("", _read(p["rules"]))
         self.roles = {k: _read(v) for k, v in p["roles"].items()}

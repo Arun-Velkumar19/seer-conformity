@@ -6,9 +6,11 @@
 #   confederates       speaking players, in fixed slot order
 #   vote_declarations  after the last pressure round, each confederate states
 #                      a vote (confederates/arguments.yaml, vote_declarations)
-#   accusation_round   adds pressure round 3 before the vote, in which the
-#                      confederates directly accuse the subject of being the
-#                      Werewolf (arguments.yaml entries with round: 3)
+#   isolation_round   adds pressure round 3 before the vote: isolation
+#                      pressure, in which everyone else has settled on Drew and
+#                      the subject is the lone holdout (arguments.yaml entries
+#                      with round: 3). Social, never evidential: no one claims
+#                      the subject is the Werewolf.
 #
 # Arguments in the bank carry a `level`; a level uses every argument at or
 # below it, so level 2 adds two arguments per round for the two new players.
@@ -17,10 +19,10 @@ levels:
   0:
     confederates: [Riley, Casey, Jordan]
     vote_declarations: false
-    accusation_round: false
+    isolation_round: false
   1:
     vote_declarations: true
   2:
     confederates: [Riley, Casey, Jordan, Taylor, Jamie]
   3:
-    accusation_round: true
+    isolation_round: true

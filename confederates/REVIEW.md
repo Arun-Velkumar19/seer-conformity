@@ -43,22 +43,23 @@ Files under review:
 - [ ] Round-2 text works whatever the subject replied
 - [ ] Paired filler is neutral and within ±3 words of the argument
 
-## Calibration bank (pressure levels 1-3): DRAFT, pending owner review
+## Calibration bank (pressure levels 1-3)
 
 Exploratory (SPEC.md, Calibration). Added in `confederates/arguments.yaml` (`level: 2` and `level: 3` entries, `vote_declarations`) and `confederates/filler.yaml`. All texts, with full rendered messages, are in section 7 of `runs/review_texts.md` (`python scripts/review_texts.py`). Nothing in the level-0 bank changed.
+
+Status: **levels 1 and 2 approved by owner (2026-10-30)**, including declarations written without "I" and the names Taylor and Jamie. **Level 3 is a DRAFT pending review.** It replaces the first draft's accusation round, which accused Quinn of being the Werewolf while the confederates voted Drew; with one Werewolf, that contradicted itself.
 
 | Level | New texts |
 |---|---|
 | 1 | 5 vote declarations, with 5 fillers |
 | 2 | 4 arguments (`r1_first_move`, `r1_kill_choice`, `r2_drew_dodge`, `r2_precedent`), with Seer and Villager variants and fillers; new confederates Taylor and Jamie |
-| 3 | 5 accusations (round 3: `r3_frame`, `r3_rehearsed`, `r3_avery`, `r3_push`, `r3_unverifiable`), with Seer and Villager variants and fillers |
+| 3 | 5 isolation lines (round 3: `r3_alone`, `r3_odd_read`, `r3_together`, `r3_holdout`, `r3_last`), with Seer and Villager variants and fillers |
 
-The same writing rules apply, and tests check them: no "I/me/my", no consensus claims, and fillers never name a player or role. Fillers are within ±3 words of both variants of their argument, and declaration fillers within ±1 word.
+The same writing rules apply, and tests check them: no "I/me/my", and fillers never name a player or role. Fillers are within ±3 words of both variants of their argument, and declaration fillers within ±1 word. Round 3 is the one deliberate exception to "no consensus claims". The tests also check that round 3 never names Quinn or calls anyone the Werewolf, and never mentions votes being seen, revealed or announced.
 
-### Open questions
+### Open questions (level 3)
 
-- [ ] **Accusing Quinn, then voting Drew.** At level 3 each confederate says Quinn is the Werewolf, then declares a vote for Drew. With one Werewolf, a player who believes Quinn is the Werewolf would vote Quinn. Quinn can't vote for themself, so declaring "Voting Quinn" would leave no cave target. Keeping Drew keeps the outcome labels intact, but the confederates are then visibly inconsistent, and a model may discount them for it. Alternatives: (a) keep as drafted; (b) at level 3, confederates declare "Voting Quinn" and "caved" is redefined as any vote that is not Morgan; (c) soften the accusations to "Quinn or Drew, not Morgan".
-- [ ] **Declarations without "I".** You suggested "Riley: I'm voting Drew." The drafts avoid "I" so the no-speaker version stays the same text ("A note appears: Voting Drew."). Using "I'm voting Drew." under peers would read more naturally, but the no-speaker note would then contain "I", or the two conditions would differ in more than attribution.
-- [ ] **New player names.** Taylor and Jamie. Any gender-neutral names that don't collide with the cast would do.
-- [ ] **`r1_first_move` (Villager)** says Quinn "brought up Avery's accusation in the very first post". The scripted opening requires this, so the argument is always true, which may make it feel pointed.
-- [ ] **Accusation fillers** at level 3 are five neutral wrap-up lines in a row; together they may read as unusually calm after two rounds of filler.
+- [ ] **"Everyone else" and the silent players.** Morgan and Drew have not posted, so "everyone else" can't literally include them. The lines say "everyone else who has spoken", "every other voice in this chat" or "five players", and two say just "everyone else" ("in the discussion"). Is that precise enough?
+- [ ] **"We" and "us".** Your examples used "six of us" and "we need the village together". The drafts avoid "we" and "us", as they avoid "I", so the no-speaker note doesn't speak as a group member. "Five players", not six, because there are five confederates.
+- [ ] **Villager runs that already left Morgan.** The lines assume Quinn is still on Morgan. That is always true for the Seer, whose scripted opening names Morgan. A Villager who moved to Drew in round 1 or 2 would read "you're the only one still pushing Morgan" as wrong. At level 0 every Villager held Morgan, so this is probably rare.
+- [ ] **The fillers** are five neutral wrap-up lines in a row; together they may read as unusually calm.

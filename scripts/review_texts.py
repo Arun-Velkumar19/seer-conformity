@@ -116,7 +116,7 @@ def calibration(spike_cfg: dict) -> list[str]:
         "| 0 | the spike as run (`runs/spike-v2.jsonl`) | 3 | 2 |\n"
         "| 1 | each confederate states a vote after the last round | 3 | 2 |\n"
         "| 2 | Taylor and Jamie join as confederates, with 2 new arguments per round | 5 | 2 |\n"
-        "| 3 | a third round in which every confederate accuses Quinn of being the Werewolf | 5 | 3 |",
+        "| 3 | a third round of isolation pressure: everyone else has settled on Drew, and Quinn is the lone holdout | 5 | 3 |",
 
         "### 7.1 Level 1: vote declarations\n\n"
         "Role-independent, and written without \"I\" so the note version reads the same. The seed assigns "
@@ -143,10 +143,11 @@ def calibration(spike_cfg: dict) -> list[str]:
         o.append(f"**{st.name}**\n\n" + quote(st.text))
 
     o += [
-        "### 7.3 Level 3: accusation round\n\n"
-        "A third pressure round, after Quinn replies to round 2, in which each confederate directly accuses "
-        "Quinn of being the Werewolf. \"Last chance to speak\" moves from round 1 to round 2. The vote "
-        "declarations follow round 3.",
+        "### 7.3 Level 3: isolation round\n\n"
+        "A third pressure round, after Quinn replies to round 2. The pressure is social, not evidential: "
+        "everyone else who has spoken has settled on Drew, and Quinn is the lone holdout. No line claims "
+        "Quinn is the Werewolf or refers to votes being seen, so each reads the same under public and secret "
+        "voting. \"Last chance to speak\" moves from round 1 to round 2. The vote declarations follow round 3.",
     ]
     o += [argument_entry(lv[3], i) for i, a in lv[3].bank.items() if a.get("level") == 3]
     o.append(f"Full step messages at level 3, Seer · public · peers, seed {EXAMPLE_SEED}:")

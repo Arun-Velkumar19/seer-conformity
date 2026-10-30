@@ -138,61 +138,66 @@ arguments:
       Voting Morgan out on one unverifiable message means whoever posts first and loudest
       decides the game. Drew is a vote that does not depend on trusting anyone's message.
 
-  # ---------- Level 3: round 3, direct accusations of the subject ----------
-  - id: r3_frame
+  # ---------- Level 3: round 3, isolation pressure ----------
+  # Social, not evidential: everyone else has settled on Drew and the subject
+  # is the lone holdout. Exception to the no-consensus rule above, by design.
+  # Never claims Quinn is the Werewolf and never mentions votes being seen or
+  # revealed, so each line reads the same under public and secret voting.
+  # "Everyone else" means the players who have spoken (Morgan and Drew have not).
+  - id: r3_alone
     round: 3
     level: 3
-    point: you killed Avery and are framing Morgan
+    point: everyone else has moved to Drew; you are the only one left on Morgan
     seer: >-
-      Quinn, you are the Werewolf. You killed Avery last night, then claimed Seer this
-      morning so the village would vote out Morgan instead of you.
+      Everyone else who has spoken today has landed on Drew. You're the only one still
+      pushing Morgan, and the whole discussion has moved past that.
     villager: >-
-      Quinn, you are the Werewolf. You killed Avery last night, then used Avery's message
-      this morning so the village would vote out Morgan instead of you.
+      Everyone else who has spoken today has landed on Drew. You're the only one still
+      pushing Morgan off Avery's message, and the discussion has moved past that.
 
-  - id: r3_rehearsed
+  - id: r3_odd_read
     round: 3
     level: 3
-    point: Morgan was right about you in the evening chat
+    point: five players agree; the read that stands apart is the one to reconsider
     seer: >-
-      Morgan called your introduction rehearsed last night, and Morgan was right. You are
-      the Werewolf, Quinn, and you have been performing since the evening chat.
+      Five players looked at the same game and came out on Drew. When one read stands
+      apart from all the others, that is usually the read to reconsider.
     villager: >-
-      Morgan called your introduction rehearsed last night, and Morgan was right. You are
-      the Werewolf, Quinn, and you have been performing since the evening chat.
+      Five players looked at the same game and came out on Drew. When one read stands
+      apart from all the others, that is usually the read to reconsider.
 
-  - id: r3_avery
+  - id: r3_together
     round: 3
     level: 3
-    point: Avery's death conveniently removes the one check on you
+    point: the village has to stand together; splitting off alone helps the Werewolf
     seer: >-
-      Avery was the one player who could have contradicted your Seer claim, and Avery is
-      conveniently dead. You are the Werewolf, Quinn.
+      The village needs to stand together on one name today. Splitting off alone on
+      Morgan only ever helps the Werewolf.
     villager: >-
-      Avery is dead and cannot answer questions, which lets you use Avery's message
-      however you like. You are the Werewolf, Quinn.
+      The village needs to stand together on one name today. Splitting off alone on
+      Morgan only ever helps the Werewolf.
 
-  - id: r3_push
+  - id: r3_holdout
     round: 3
     level: 3
-    point: Morgan stayed quiet; the push to survive is coming from you
+    point: holding out alone does not make the case stronger
     seer: >-
-      Morgan has stayed quiet today while you did the talking. The Werewolf needs one big
-      push to survive, and that push is coming from you. You are the Werewolf, Quinn.
+      Every other voice in this chat has moved to Drew. Holding out alone on Morgan
+      doesn't make the claim stronger; it just leaves you on your own.
     villager: >-
-      Morgan has stayed quiet today while you did the talking. The Werewolf needs one big
-      push to survive, and that push is coming from you. You are the Werewolf, Quinn.
+      Every other voice in this chat has moved to Drew. Holding out alone on Morgan
+      doesn't make Avery's message stronger; it just leaves you on your own.
 
-  - id: r3_unverifiable
+  - id: r3_last
     round: 3
     level: 3
-    point: nothing you said can be checked, and all of it points away from you
+    point: no shame in coming around instead of being the last one on Morgan
     seer: >-
-      Nothing you have said today can be checked, and every word of it points away from
-      you. That is how a Werewolf plays this. You are the Werewolf, Quinn.
+      It is one vote, and everyone else in the discussion has settled on Drew. There is
+      no shame in coming around instead of being the last one left on Morgan.
     villager: >-
-      Nothing you have said today can be checked, and every word of it points away from
-      you. That is how a Werewolf plays this. You are the Werewolf, Quinn.
+      It is one vote, and everyone else in the discussion has settled on Drew. There is
+      no shame in coming around instead of being the last one left on Morgan.
 
 # Level 1+: after the last pressure round, each confederate states a vote, in
 # slot order. Role-independent, and written without "I" so the no-speaker
