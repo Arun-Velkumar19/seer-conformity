@@ -88,7 +88,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--config", default="configs/spike.yaml")
     ap.add_argument("--dry-run", action="store_true", help="use the deterministic fake model (no API calls)")
-    ap.add_argument("--model", action="append", help="model key(s) from the config; default all")
+    ap.add_argument("--model", action="append",
+                    help="model key(s) from the config's models or optional_models; default: its models")
     ap.add_argument("--out", help="JSONL output path (overrides the default)")
     ap.add_argument("--workers", type=int, default=4, help="concurrent trials")
     ap.add_argument("--limit", type=int, help="run at most this many pending trials")
@@ -111,9 +112,10 @@ def main() -> None:
     if args.show_prompts:
         show_prompts(cfg, args.cell, args.seed_index)
         return
+    selectable = cfg["models"] + cfg.get("optional_models", [])
     for m in args.model or []:
-        if m not in cfg["models"]:
-            ap.error(f"{m} is not in this config's models: {cfg['models']}")
+        if m not in selectable:
+            ap.error(f"{m} is not in this config's models: {selectable}")
 
     out = Path(args.out) if args.out else records_path(cfg, args.dry_run)
     problem = protected_problem(cfg, out)

@@ -22,6 +22,12 @@ models:
   gpt-6.1-sol:
     provider: openai
     model: gpt-6.1-sol
+    effort: low               # reasoning model with no "none" setting; low is its lowest used here
+    max_output_tokens: 16000
+
+  gpt-6.1-terra:
+    provider: openai
+    model: gpt-6.1-terra
     effort: low
     max_output_tokens: 16000
 

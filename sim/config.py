@@ -67,7 +67,7 @@ def load_config(path: str | Path, pressure_level: int | None = None) -> dict:
         raise ValueError(f"unknown pressure levels: {sorted(unknown)}")
     registry = _read_yaml(cfg["model_registry"])["models"]
     cfg["model_specs"] = {}
-    for key in cfg["models"]:
+    for key in cfg["models"] + cfg.get("optional_models", []):
         if key not in registry:
             raise ValueError(f"model {key!r} is not in {cfg['model_registry']}")
         missing = [k for k in MODEL_FIELDS if registry[key].get(k) is None]

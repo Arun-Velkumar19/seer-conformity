@@ -9,6 +9,10 @@
 
 base: configs/spike.yaml
 name: calibration
+# Default model set is the spike's (gpt-6-luna). These can also be chosen with
+# --model; they never run unless named, so a command without --model stays
+# Luna-only.
+optional_models: [gpt-6.1-sol, gpt-6.1-terra]
 runs_per_cell: 10      # default; --runs N overrides it (up to the number of seeds)
 pressure_level: null   # required: pass --pressure-level 1-4
 # Run index i uses seeds[i] in every cell, so public and secret (and every

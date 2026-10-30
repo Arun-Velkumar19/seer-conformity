@@ -608,6 +608,22 @@ class CalibrationRunTests(unittest.TestCase):
             with open(out) as f:
                 self.assertEqual(sum(1 for _ in f), 90)        # nothing logged twice
 
+    def test_optional_models(self):
+        cfg = load_config("configs/calibration.yaml", 4)
+        self.assertEqual(cfg["models"], ["gpt-6-luna"])                # default run stays Luna-only
+        for key in ("gpt-6.1-sol", "gpt-6.1-terra"):
+            spec = cfg["model_specs"][key]
+            self.assertEqual((spec["provider"], spec["model"], spec["effort"]), ("openai", key, "low"))
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "calibration.jsonl"
+            recs = run_all({**cfg, "runs_per_cell": 2}, out, dry_run=True, cell_ids=self.PAIR,
+                           models=["gpt-6.1-sol", "gpt-6.1-terra"])
+            self.assertEqual(len(recs), 8)
+            self.assertEqual({(r["model_key"], r["effort"], r["effort_sent"]) for r in recs},
+                             {("gpt-6.1-sol", "low", "low"), ("gpt-6.1-terra", "low", "low")})
+            # Luna's existing runs don't count as done for another model
+            self.assertEqual(len(run_all({**cfg, "runs_per_cell": 2}, out, dry_run=True, cell_ids=self.PAIR)), 4)
+
     def test_parse_cells(self):
         self.assertEqual(run_spike.parse_cells(CFG, ["seer-public-peers,villager-public-peers"]), self.PAIR)
         self.assertEqual(run_spike.parse_cells(CFG, ["seer-public-peers", "villager-public-peers"]), self.PAIR)
