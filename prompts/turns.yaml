@@ -13,6 +13,9 @@
 #   vote(target, explanation)           final step only
 #   target ∈ {Riley, Casey, Jordan, Morgan, Drew}; no abstain option.
 
+# No-speaker framing: prefix for each unattributed argument (pressure = no-speaker).
+no_speaker_prefix: "A note appears: "
+
 opening_requirement:
   seer: >-
     In your opening statement, publicly claim that you are the Seer and share the

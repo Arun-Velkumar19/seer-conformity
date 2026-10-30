@@ -1,4 +1,4 @@
-"""Run trials against the Claude API and write one JSONL record per run.
+"""Run trials and write one JSONL record per run.
 
 Per run (SPEC v2, Sequence per run):
   1. private_vote tool call
@@ -7,10 +7,10 @@ Per run (SPEC v2, Sequence per run):
   4. pressure round 2 + final vote tool call
   (5. private belief, diagnostic arm only)
 
-The conversation is append-only: each response's content goes back unchanged,
-so thinking blocks stay valid. Forced tool_choice is not available on current
-models, so vote steps use tool_choice "auto" + strict schemas + the prompt's
-instruction; if no vote arrives, one fixed reminder is sent and counted.
+The runner is provider-neutral (sim/providers). Vote steps allow tools
+("auto") and rely on strict schemas plus the prompt's instruction, since
+current models reject forced tool choice; if no vote arrives, one fixed
+reminder is sent and counted. Text steps disallow tools ("none").
 """
 
 from __future__ import annotations
@@ -22,15 +22,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
-import anthropic
-
 from . import labeling
-from .config import Cell, cells, model_id
+from .config import Cell, cells
+from .providers import ProviderError, open_session
 from .scenario import Scenario, Step
 from .tools import vote_tools
 
-SCHEMA_VERSION = 1
-TEMPERATURE_NOTE = "api_default (sampling params not accepted on API version 2026-10-21)"
+SCHEMA_VERSION = 2
+TEMPERATURE_NOTE = "not sent (provider default)"
 REMINDER = "Please record your vote now using the {tool} tool."
 
 
@@ -42,90 +41,60 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _dump(content) -> list | str:
-    """JSON-safe copy of message content (SDK blocks or plain dicts)."""
-    if isinstance(content, str):
-        return content
-    out = []
-    for block in content:
-        out.append(block.model_dump(mode="json", exclude_none=True) if hasattr(block, "model_dump") else block)
-    return out
-
-
-def _text(content) -> str:
-    return "\n".join(b.text for b in content if b.type == "text").strip()
-
-
 class Trial:
-    def __init__(self, client, cfg: dict, scenario: Scenario, cell: Cell, run_index: int):
-        self.client = client
+    def __init__(self, cfg: dict, scenario: Scenario, spec: dict, cell: Cell, run_index: int, clients: dict):
         self.cfg = cfg
         self.sc = scenario
+        self.spec = spec
         self.cell = cell
         self.run_index = run_index
         self.seed = cfg["seeds"][run_index]
-        self.model = model_id(cfg)
         self.system = scenario.system_prompt(cell)
-        self.tools = vote_tools(scenario.candidates)
-        self.history: list[dict] = []
+        if spec["provider"] == "fake":
+            # The fake model varies by run; real models only see the prompts.
+            spec = {**spec, "salt": f"{cell.id}:{self.seed}"}
+        self.session = open_session(spec, self.system, vote_tools(scenario.candidates), clients)
+        self.transcript: list[dict] = []   # provider-neutral view, for reading and checks
         self.usage: list[dict] = []
         self.reminders = 0
 
-    def _call(self, user_content: list[dict], tool: str | None):
-        self.history.append({"role": "user", "content": user_content})
-        m = self.cfg["model"]
-        resp = self.client.messages.create(
-            model=self.model,
-            max_tokens=m["max_tokens"],
-            system=self.system,
-            messages=self.history,
-            tools=self.tools,
-            tool_choice={"type": "auto", "disable_parallel_tool_use": True} if tool else {"type": "none"},
-            output_config={"effort": m["effort"]},
-        )
-        self.history.append({"role": "assistant", "content": resp.content})
-        u = resp.usage
-        self.usage.append(
-            {
-                "input_tokens": u.input_tokens,
-                "output_tokens": u.output_tokens,
-                "cache_creation_input_tokens": u.cache_creation_input_tokens or 0,
-                "cache_read_input_tokens": u.cache_read_input_tokens or 0,
-                "stop_reason": resp.stop_reason,
-            }
-        )
-        if resp.stop_reason == "refusal":
-            category = getattr(resp.stop_details, "category", None) if resp.stop_details else None
-            raise TrialError(f"refusal (category={category})")
-        if resp.stop_reason == "max_tokens":
-            raise TrialError("max_tokens reached")
-        return resp
+    def _send(self, items: list[dict], tool: str | None):
+        self.transcript.append({"role": "user", "items": items})
+        turn = self.session.send(items, "auto" if tool else "none")
+        self.usage.append(turn.usage)
+        self.transcript.append({
+            "role": "assistant",
+            "text": turn.text,
+            "tool_calls": [{"id": c.id, "name": c.name, "input": c.input} for c in turn.tool_calls],
+            "stop": turn.stop,
+        })
+        if turn.stop == "max_tokens":
+            raise TrialError("max output tokens reached")
+        return turn
 
     def _tool_step(self, prefix: list[dict], step: Step) -> tuple[dict, str]:
-        """Send a step that must end in a call to step.tool. Returns (input, tool_use_id)."""
-        content = prefix + [{"type": "text", "text": step.text}]
+        """Send a step that must end in a call to step.tool. Returns (input, call_id)."""
+        items = prefix + [{"type": "text", "text": step.text}]
         for attempt in range(2):
-            resp = self._call(content, step.tool)
-            uses = [b for b in resp.content if b.type == "tool_use"]
-            match = next((b for b in uses if b.name == step.tool), None)
-            if match:
-                return dict(match.input), match.id
+            turn = self._send(items, step.tool)
+            match = next((c for c in turn.tool_calls if c.name == step.tool), None)
+            if match and {"target", "explanation"} <= set(match.input):
+                return match.input, match.id
             if attempt == 1:
                 break
             self.reminders += 1
-            content = [
-                {"type": "tool_result", "tool_use_id": b.id, "content": f"Use the {step.tool} tool at this step.", "is_error": True}
-                for b in uses
+            items = [
+                {"type": "tool_result", "call_id": c.id, "content": f"Use the {step.tool} tool at this step.", "is_error": True}
+                for c in turn.tool_calls
             ] + [{"type": "text", "text": REMINDER.format(tool=step.tool)}]
-        raise TrialError(f"no {step.tool} call after reminder")
+        raise TrialError(f"no valid {step.tool} call after reminder")
 
     def _text_step(self, prefix: list[dict], step: Step) -> str:
-        resp = self._call(prefix + [{"type": "text", "text": step.text}], None)
-        return _text(resp.content)
+        return self._send(prefix + [{"type": "text", "text": step.text}], None).text
 
     @staticmethod
-    def _ack(tool_use_id: str) -> list[dict]:
-        return [{"type": "tool_result", "tool_use_id": tool_use_id, "content": "Recorded."}]
+    def _ack(call_id: str) -> list[dict]:
+        return [{"type": "tool_result", "call_id": call_id, "content": "Recorded."}]
 
     def run(self) -> dict:
         started = _now()
@@ -134,13 +103,13 @@ class Trial:
         opening = reply = belief = None
         error = None
         try:
-            private, tid = self._tool_step([], steps[0])
-            opening = self._text_step(self._ack(tid), steps[1])
+            private, cid = self._tool_step([], steps[0])
+            opening = self._text_step(self._ack(cid), steps[1])
             reply = self._text_step([], steps[2])
-            final, tid = self._tool_step([], steps[3])
+            final, cid = self._tool_step([], steps[3])
             if self.cfg.get("diagnostic_private_belief"):
-                belief = self._text_step(self._ack(tid), self.sc.diagnostic_step())
-        except (TrialError, anthropic.APIError) as e:
+                belief = self._text_step(self._ack(cid), self.sc.diagnostic_step())
+        except (TrialError, ProviderError) as e:
             error = f"{type(e).__name__}: {e}"
 
         outcome = labeling.label(
@@ -150,6 +119,13 @@ class Trial:
         return {
             "schema_version": SCHEMA_VERSION,
             "experiment": self.cfg["name"],
+            "dry_run": self.spec["provider"] == "fake",
+            "model_key": self.spec["key"],
+            "provider": self.spec["provider"],
+            "model": self.spec["model"],
+            "effort": self.spec["effort"],
+            "max_output_tokens": self.spec["max_output_tokens"],
+            "temperature": TEMPERATURE_NOTE,
             "cell_id": self.cell.id,
             "role": self.cell.role,
             "visibility": self.cell.visibility,
@@ -157,17 +133,13 @@ class Trial:
             "group_size": len(self.sc.confederates),
             "run_index": self.run_index,
             "seed": self.seed,
-            "model": self.model,
-            "effort": self.cfg["model"]["effort"],
-            "max_tokens": self.cfg["model"]["max_tokens"],
-            "temperature": TEMPERATURE_NOTE,
-            "sdk_version": anthropic.__version__,
             "started_at": started,
             "finished_at": _now(),
             "slot_order": {"round_1": order[1], "round_2": order[2]},
             "system_prompt": self.system,
-            "tools": self.tools,
-            "messages": [{"role": m["role"], "content": _dump(m["content"])} for m in self.history],
+            "tools": self.session.api_tools(),
+            "api_messages": self.session.api_messages(),
+            "transcript": self.transcript,
             "private_initial_vote": private,
             "opening_statement": opening,
             "opening_names_target": bool(opening and self.sc.target in opening),
@@ -178,15 +150,19 @@ class Trial:
             "outcome": outcome,
             "error": error,
             "usage": {
-                "input_tokens": sum(u["input_tokens"] for u in self.usage),
-                "output_tokens": sum(u["output_tokens"] for u in self.usage),
+                "input_tokens": sum(u.get("input_tokens", 0) for u in self.usage),
+                "output_tokens": sum(u.get("output_tokens", 0) for u in self.usage),
                 "per_call": self.usage,
             },
         }
 
 
-def _done_keys(path: Path) -> set[tuple[str, int]]:
-    """(cell_id, run_index) pairs already logged without an error, for resuming."""
+def run_key(r: dict) -> tuple[str, str, int]:
+    return (r["model_key"], r["cell_id"], r["run_index"])
+
+
+def _done_keys(path: Path) -> set[tuple[str, str, int]]:
+    """Runs already logged without an error, for resuming."""
     if not path.exists():
         return set()
     keys = set()
@@ -195,37 +171,45 @@ def _done_keys(path: Path) -> set[tuple[str, int]]:
             if line.strip():
                 r = json.loads(line)
                 if r["outcome"] != labeling.ERROR:
-                    keys.add((r["cell_id"], r["run_index"]))
+                    keys.add(run_key(r))
     return keys
 
 
-def run_all(cfg: dict, out_path: Path, client=None, workers: int = 4, limit: int | None = None) -> list[dict]:
-    """Run every (cell, run_index) not already in out_path; append records as they finish."""
-    client = client or anthropic.Anthropic(max_retries=5)
+def run_all(cfg: dict, out_path: Path, dry_run: bool = False, workers: int = 4,
+            limit: int | None = None, models: list[str] | None = None) -> list[dict]:
+    """Run every (model, cell, run_index) not already in out_path; append records as they finish.
+    With dry_run, every model is replaced by the deterministic fake provider."""
     scenario = Scenario(cfg)
+    specs = [cfg["model_specs"][k] for k in (models or cfg["models"])]
+    if dry_run:
+        specs = [{**s, "provider": "fake"} for s in specs]
     done = _done_keys(out_path)
     todo = [
-        (cell, i)
+        (spec, cell, i)
+        for spec in specs
         for i in range(cfg["runs_per_cell"])
         for cell in cells(cfg)
-        if (cell.id, i) not in done
+        if (spec["key"], cell.id, i) not in done
     ][:limit]
     out_path.parent.mkdir(parents=True, exist_ok=True)
     lock = threading.Lock()
+    clients: dict = {}
     records = []
 
-    def one(cell: Cell, i: int) -> dict:
-        record = Trial(client, cfg, scenario, cell, i).run()
+    def one(spec: dict, cell: Cell, i: int) -> dict:
+        with lock:  # client construction is shared
+            trial = Trial(cfg, scenario, spec, cell, i, clients)
+        record = trial.run()
         with lock, open(out_path, "a") as f:
             f.write(json.dumps(record) + "\n")
         return record
 
     t0 = time.monotonic()
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(one, c, i) for c, i in todo]
+        futures = [pool.submit(one, s, c, i) for s, c, i in todo]
         for n, fut in enumerate(as_completed(futures), 1):
             r = fut.result()
             records.append(r)
-            print(f"[{n}/{len(todo)}] {r['cell_id']} #{r['run_index']}: {r['outcome']}"
+            print(f"[{n}/{len(todo)}] {r['model_key']} {r['cell_id']} #{r['run_index']}: {r['outcome']}"
                   f"{' (' + r['error'] + ')' if r['error'] else ''}  {time.monotonic() - t0:.0f}s", flush=True)
     return records

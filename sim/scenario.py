@@ -50,12 +50,12 @@ class Scenario:
         self.subject = sc["subject"]
         self.confederates = sc["confederates"]
         self.candidates = sc["candidates"]
-        self.no_speaker_prefix = sc["attribution"]["no_speaker"]
 
         self.rules = _COMMENT.sub("", _read(p["rules"]))
         self.roles = {k: _read(v) for k, v in p["roles"].items()}
         self.visibility = {k: _read(v) for k, v in p["visibility"].items()}
         self.turns = _yaml(p["turns"])
+        self.no_speaker_prefix = self.turns["no_speaker_prefix"]
 
         bank = _yaml(p["arguments"])
         self.target = bank["target"]

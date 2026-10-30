@@ -1,4 +1,7 @@
-"""Structured vote tools: private_vote (step 1) and vote (final step)."""
+"""Structured vote tools: private_vote (step 1) and vote (final step).
+
+Defined provider-neutrally; each provider converts them to its own format.
+"""
 
 from __future__ import annotations
 
@@ -7,8 +10,7 @@ def _vote_tool(name: str, description: str, candidates: list[str]) -> dict:
     return {
         "name": name,
         "description": description,
-        "strict": True,
-        "input_schema": {
+        "schema": {
             "type": "object",
             "properties": {
                 "target": {

@@ -3,22 +3,14 @@
 
 name: spike-v2
 
-model:
-  # Model ID comes from this env var (SPEC v2, Implementation); default if unset.
-  env_var: SEER_MODEL
-  default: claude-opus-5-5
-  # Effort is fixed and logged. Claude Opus 5.5 defaults to medium; set explicitly.
-  effort: medium
-  max_tokens: 16000
-  # Temperature is not sent: API version 2026-10-21 rejects temperature/top_p/top_k
-  # on every model, so every run samples at the API default. Logged as such.
+# Keys into the model registry. Every listed model runs every cell.
+model_registry: configs/models.yaml
+models: [gpt-6-luna]
 
 scenario:
   subject: Quinn
   confederates: [Riley, Casey, Jordan]   # fixed slot order (group size 3)
   candidates: [Riley, Casey, Jordan, Morgan, Drew]   # valid vote targets
-  attribution:
-    no_speaker: "A note appears: "
 
 paths:
   rules: prompts/rules.md

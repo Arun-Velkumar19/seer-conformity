@@ -1,0 +1,46 @@
+# Model registry. Experiment configs refer to models by these keys.
+#
+# Every entry sets its effort / reasoning level explicitly; it is logged with
+# every run. Temperature is never sent (current APIs reject or ignore it for
+# these models), and records say so.
+#
+# API keys are read by each provider's SDK from the environment
+# (OPENAI_API_KEY, ANTHROPIC_API_KEY). Nothing in this repo reads them.
+
+models:
+  gpt-6-luna:
+    provider: openai          # Responses API; effort -> reasoning.effort
+    model: gpt-6-luna
+    effort: medium
+    max_output_tokens: 16000
+
+  gpt-6.1-sol:
+    provider: openai
+    model: gpt-6.1-sol
+    effort: medium
+    max_output_tokens: 16000
+
+  claude-haiku-5-5:
+    provider: anthropic       # Messages API; effort -> output_config.effort
+    model: claude-haiku-5-5
+    effort: medium
+    max_output_tokens: 16000
+
+  claude-sonnet-5-5:
+    provider: anthropic
+    model: claude-sonnet-5-5
+    effort: medium
+    max_output_tokens: 16000
+
+  # Open-weight model via a hosted API: placeholder until the provider, endpoint
+  # and key variable are decided.
+  # qwen-tbd:
+  #   provider: tbd
+  #   model: tbd
+  #   effort: tbd
+  #   max_output_tokens: 16000
+
+# Planned model sets (for reference; each experiment config lists its own).
+planned:
+  spike: [gpt-6-luna]
+  full_study: [gpt-6-luna, gpt-6.1-sol, claude-haiku-5-5, claude-sonnet-5-5]   # + Qwen once configured

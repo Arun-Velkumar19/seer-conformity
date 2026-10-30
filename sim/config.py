@@ -1,9 +1,8 @@
-"""Load the experiment config and expand it into cells."""
+"""Load the experiment config and model registry, and expand cells."""
 
 from __future__ import annotations
 
 import itertools
-import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,6 +11,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 PRESSURES = ("none", "no_speaker", "peers")
+MODEL_FIELDS = ("provider", "model", "effort", "max_output_tokens")
 
 
 @dataclass(frozen=True)
@@ -33,12 +33,17 @@ def load_config(path: str | Path) -> dict:
     unknown = set(cfg["factors"]["pressure"]) - set(PRESSURES)
     if unknown:
         raise ValueError(f"unknown pressure levels: {sorted(unknown)}")
+    with open(REPO_ROOT / cfg["model_registry"]) as f:
+        registry = yaml.safe_load(f)["models"]
+    cfg["model_specs"] = {}
+    for key in cfg["models"]:
+        if key not in registry:
+            raise ValueError(f"model {key!r} is not in {cfg['model_registry']}")
+        missing = [k for k in MODEL_FIELDS if registry[key].get(k) is None]
+        if missing:
+            raise ValueError(f"model {key!r} is missing {missing} (effort must be explicit)")
+        cfg["model_specs"][key] = {"key": key, **registry[key]}
     return cfg
-
-
-def model_id(cfg: dict) -> str:
-    m = cfg["model"]
-    return os.environ.get(m["env_var"]) or m["default"]
 
 
 def cells(cfg: dict) -> list[Cell]:
