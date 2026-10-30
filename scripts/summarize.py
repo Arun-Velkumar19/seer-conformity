@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import math
 import sys
 from collections import defaultdict
@@ -88,10 +89,18 @@ def did(rows: list[dict], role: str = "seer") -> tuple[float, float]:
     return (est, math.sqrt(var))
 
 
+def moderator_text(texts: list[str], speakers: list[str], prefix: str) -> list[list[str]]:
+    """Per turn, the paragraphs that are not pressure content (not spoken by a
+    confederate and not a note): the moderator's own lines."""
+    starts = tuple(f"{n}: " for n in speakers) + (prefix,)
+    return [[para for para in t.split("\n\n") if not para.startswith(starts)] for t in texts]
+
+
 def fidelity_problems(cfg: dict, prefix: str, records: list[dict]) -> list[str]:
     """Spike check 2: for each (model, role, visibility, seed), the no-speaker run must
     show exactly the peer run's text with speaker names swapped for the note prefix,
-    and all pressure levels must have the same number of turns."""
+    all pressure levels must have the same number of turns, and the moderator's own
+    lines (everything except the pressure content) must be identical across levels."""
     groups = defaultdict(dict)
     for r in records:
         if r["outcome"] != labeling.ERROR:
@@ -107,6 +116,10 @@ def fidelity_problems(cfg: dict, prefix: str, records: list[dict]) -> list[str]:
         lengths = {p: len(t) for p, t in by_p.items()}
         if len(set(lengths.values())) > 1:
             problems.append(f"{key}: turn counts differ {lengths}")
+        speakers = cfg["scenario"]["confederates"]
+        moderator = {p: moderator_text(t, speakers, prefix) for p, t in by_p.items()}
+        if len({json.dumps(m) for m in moderator.values()}) > 1:
+            problems.append(f"{key}: moderator text differs across pressure levels")
     return problems
 
 

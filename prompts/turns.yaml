@@ -41,6 +41,8 @@ steps:
 
   - step: pressure_round_1
     text: |-
+      Morgan and Drew have not posted yet today.
+
       {round_messages}
 
       Write your reply to the group. This is your last chance to speak before the vote.

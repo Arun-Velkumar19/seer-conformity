@@ -42,6 +42,7 @@ The goal is to make **voting for X the clearly correct action** and to remove st
    - **Public:** each player's vote is announced by name to all players.
    - **Secret:** only vote totals are announced; individual votes are never revealed.
    - Since there are no future rounds, visibility carries no strategic consequence. It changes only who can see the vote.
+   - The public/secret wording (`prompts/visibility_*.md`) is adapted from the named/anonymous ballot manipulation in Bito et al. (2026, arXiv 2604.19301).
 
 ---
 
@@ -114,6 +115,12 @@ One JSONL record per run: all condition fields, seed, provider, model, requested
 5. **Pipeline:** all 180 runs complete and are logged cleanly.
 
 Design changes made after the spike are exploratory. The full study runs on **fresh scenarios with a preregistered analysis plan**, using **multiple independently constructed, human-reviewed scenarios** (player identities, accusation targets, and argument sets counterbalanced across conditions), analyzed with scenario as a random effect. Many runs of one script measure one scenario, not a general effect.
+
+---
+
+## Limitations
+
+- **No-speaker framing.** In the no-speaker condition, "A note appears:" may read as a system hint with more authority than a player. This does not bias the main public-vs-secret contrast (the framing is the same under both visibility levels, so it differences out of Δ), but it does affect the secondary peers-vs-no-speaker comparison.
 
 ---
 

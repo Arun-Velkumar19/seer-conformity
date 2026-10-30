@@ -1,6 +1,6 @@
 # Bank and prompt review: draft v2.0
 
-Status: **approved by owner as drafted (2026-10-23).** The open questions below are resolved as "keep the draft as written," except the visibility wording check, which is still to do before the main runs.
+Status: **approved by owner as drafted (2026-10-23); re-approved 2026-10-29** with one addition: the moderator line "Morgan and Drew have not posted yet today." before pressure round 1, identical in every condition and role. All open questions below are resolved.
 
 Files under review:
 
@@ -31,7 +31,7 @@ Files under review:
 - [x] **The notes are never explained.** "A note appears:" is used without any rule describing notes, because adding a rule to every condition would hint at them in the none and peers conditions. Is that acceptable, or should every condition carry a one-line rule ("anonymous notes may appear in the chat")?
 - [x] **No filler is perfectly neutral.** Three players answering a Seer claim with process talk ("let's make sure everyone speaks") may itself read as mild doubt. That is a baseline cost the none condition can't avoid. Is this level acceptable?
 - [x] **Scripting the Villager's opening could be leading.** Asking Quinn to state who they plan to vote for could push the vote one way or the other. An alternative is to require only that Quinn share Avery's message.
-- [ ] **Still open: the visibility wording is my paraphrase.** Check it against Bito et al. (arXiv 2604.19301) before the main runs.
+- [x] **Visibility wording.** Kept as drafted (owner decision, 2026-10-29); documented in SPEC.md as adapted from the Bito et al. (2026, arXiv 2604.19301) named/anonymous ballot manipulation.
 - [x] **Two arguments may be weak for a Seer** because they dispute a claim Quinn knows is true: `r1_helpful` ("organizing makes Morgan look innocent") and `r2_stakes` ("Drew is the safer vote"). That is expected, but please judge whether they read as real play.
 
 ## Plausibility checklist (per argument)

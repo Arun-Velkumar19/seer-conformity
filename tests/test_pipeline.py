@@ -29,6 +29,7 @@ import summarize  # noqa: E402
 
 CFG = load_config("configs/spike.yaml")
 SC = Scenario(CFG)
+QUIET_LINE = "Morgan and Drew have not posted yet today."
 
 
 class Dumpable(NS):
@@ -50,6 +51,16 @@ class ScenarioTests(unittest.TestCase):
                 for name in SC.confederates:
                     swapped = swapped.replace(f"{name}: ", SC.no_speaker_prefix)
                 self.assertEqual(swapped, st["no_speaker"][k].text)
+
+    def test_quiet_players_line_before_round_1(self):
+        """The moderator line opens pressure round 1, identically in every condition and role."""
+        rendered = set()
+        for cell, seed in itertools.product(cells(CFG), CFG["seeds"]):
+            steps = SC.steps(cell, seed)
+            self.assertTrue(steps[2].text.startswith(QUIET_LINE + "\n\n"), cell.id)
+            self.assertEqual(sum(QUIET_LINE in st.text for st in steps), 1, cell.id)
+            rendered.add(steps[2].text.split("\n\n")[0])
+        self.assertEqual(rendered, {QUIET_LINE})
 
     def test_private_vote_precedes_condition_content(self):
         for role, seed in itertools.product(["seer", "villager"], CFG["seeds"][:3]):
@@ -109,6 +120,7 @@ class DryRunPipelineTests(unittest.TestCase):
             for r in recs:
                 self.assertEqual(r["effort"], "low")
                 self.assertEqual(len(user_texts(r)), 4)
+                self.assertEqual(user_texts(r)[2].split("\n\n")[0], QUIET_LINE)
 
     def test_dry_run_is_deterministic(self):
         with tempfile.TemporaryDirectory() as d:
@@ -126,6 +138,18 @@ class DryRunPipelineTests(unittest.TestCase):
             victim = next(r for r in recs if r["pressure"] == "no_speaker")
             victim["transcript"][4]["items"][0]["text"] += " tampered"
             self.assertTrue(summarize.fidelity_problems(CFG, SC.no_speaker_prefix, recs))
+
+    def test_fidelity_check_catches_moderator_line_drift(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "dry.jsonl"
+            run_all(CFG, out, dry_run=True, limit=36)
+            recs = load_records(out)
+            self.assertEqual(summarize.fidelity_problems(CFG, SC.no_speaker_prefix, recs), [])
+            victim = next(r for r in recs if r["pressure"] == "none")
+            item = victim["transcript"][4]["items"][0]
+            item["text"] = item["text"].replace(QUIET_LINE, "Morgan has not posted yet today.")
+            problems = summarize.fidelity_problems(CFG, SC.no_speaker_prefix, recs)
+            self.assertTrue(any("moderator text differs" in p for p in problems), problems)
 
 
 # ---- Request shape for the real providers, using stub clients (no network) ----

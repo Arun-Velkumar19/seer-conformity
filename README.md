@@ -50,7 +50,7 @@ Real runs read `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from your environment (the
 python scripts/run_spike.py
 ```
 
-Then `python scripts/summarize.py` writes `runs/summary.csv`, and `python scripts/sample_transcripts.py` writes 10 peer transcripts to `runs/samples.md` for the plausibility read. `python -m unittest discover tests` runs the offline tests.
+Then `python scripts/summarize.py` writes `runs/summary.csv`, and `python scripts/sample_transcripts.py` writes 10 peer transcripts to `runs/samples.md` for the plausibility read. `python scripts/review_texts.py` writes every experiment text to `runs/review_texts.md` for review. `python -m unittest discover tests` runs the offline tests.
 
 ## Repository layout
 
