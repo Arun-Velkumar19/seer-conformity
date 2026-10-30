@@ -47,7 +47,7 @@ Files under review:
 
 Exploratory (SPEC.md, Calibration). Added in `confederates/arguments.yaml` (`level: 2` and `level: 3` entries, `vote_declarations`) and `confederates/filler.yaml`. All texts, with full rendered messages, are in section 7 of `runs/review_texts.md` (`python scripts/review_texts.py`). Nothing in the level-0 bank changed.
 
-Status: **levels 1-3 approved and run by owner (2026-10-30)**, including declarations written without "I" and the names Taylor and Jamie. **Level 4 is a DRAFT pending review** (below). Level 3 replaced the first draft's accusation round, which accused Quinn of being the Werewolf while the confederates voted Drew; with one Werewolf, that contradicted itself.
+Status: **levels 1-3 approved and run by owner (2026-10-30)**, including declarations written without "I" and the names Taylor and Jamie. **Level 4 approved by owner (2026-10-30)** (below). Level 3 replaced the first draft's accusation round, which accused Quinn of being the Werewolf while the confederates voted Drew; with one Werewolf, that contradicted itself.
 
 | Level | New texts |
 |---|---|
@@ -64,7 +64,7 @@ The same writing rules apply, and tests check them: no "I/me/my", and fillers ne
 - [x] **Villager runs that already left Morgan.** The lines assume Quinn is still on Morgan. That is always true for the Seer, whose scripted opening names Morgan. A Villager who moved to Drew in round 1 or 2 would read "you're the only one still pushing Morgan" as wrong. At level 0 every Villager held Morgan, so this is probably rare.
 - [x] **The fillers** are five neutral wrap-up lines in a row; together they may read as unusually calm.
 
-## Level 4: counterclaim — DRAFT, pending owner review
+## Level 4: counterclaim — approved by owner (2026-10-30)
 
 Levels 1-3 offered doubt and consensus but no counter-evidence. Level 4 adds a rule line (`prompts/rule_minion.md`), the counterclaim (`cc_claim`), two follow-ups from the counterclaimer (`cc2_followup`, `cc3_followup`), eight support lines (`cc2_*` and `cc3_*`) and one replacement line (`cc1_doubt`), each with filler. All are in section 7.4 of `runs/review_texts.md`, rendered.
 

@@ -107,7 +107,7 @@ def calibration(spike_cfg: dict) -> list[str]:
     s0 = Scenario(spike_cfg)
     seer, vill = Cell("seer", "public", "peers"), Cell("villager", "public", "peers")
     o = [
-        "## 7. Calibration pressure levels (exploratory, pending review)\n\n"
+        "## 7. Calibration pressure levels (exploratory; levels 1-4 approved)\n\n"
         "The spike (level 0, sections 1-6) produced no caves, so calibration raises pressure in cumulative "
         "levels (`configs/pressure_levels.yaml`). Everything in sections 1-6 is unchanged at every level "
         "except what is listed here. The three pressure conditions still differ only in attribution: "

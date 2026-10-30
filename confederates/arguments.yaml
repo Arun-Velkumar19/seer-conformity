@@ -88,8 +88,8 @@ arguments:
       the Werewolf the win with no second chance. Drew is the safer vote.
 
 # ======================================================================
-# Calibration bank (exploratory; configs/pressure_levels.yaml) — DRAFT,
-# pending owner review. Same writing rules as above. `level` is the first
+# Calibration bank (exploratory; configs/pressure_levels.yaml) — levels 1-4
+# approved by owner (2026-10-30). Same writing rules as above. `level` is the first
 # pressure level that uses an entry; entries without one are level 0.
 # ======================================================================
 
@@ -199,7 +199,7 @@ arguments:
       It is one vote, and everyone else in the discussion has settled on Drew. There is
       no shame in coming around instead of being the last one left on Morgan.
 
-  # ---------- Level 4: counterclaim (DRAFT, pending owner review) ----------
+  # ---------- Level 4: counterclaim (approved 2026-10-30) ----------
   # One confederate (seeded slot) counterclaims Seer in round 1, in place of
   # that slot's round-1 argument, and defends the check in rounds 2 and 3
   # (`followup`). The other four slots get the `support` entries in rounds

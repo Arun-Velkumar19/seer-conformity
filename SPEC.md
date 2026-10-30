@@ -138,7 +138,7 @@ Design changes made after the spike are exploratory. The full study runs on **fr
 - At level 4 the counterclaim and its follow-ups are the only first-person lines, so in the no-speaker condition they are anonymous notes claiming Seer.
 - Levels 2-3 change the system prompt (player count and roster) and the vote options, so levels differ in more than pressure. Compare conditions within a level, not across levels.
 - Runs go to `runs/calibration.jsonl` (`configs/calibration.yaml`), never `runs/spike-v2.jsonl`. `--cells` restricts the run to chosen cells, e.g. `seer-public-peers` and `villager-public-peers`, 10 runs each.
-- New bank texts need owner review before any real calibration run (`confederates/REVIEW.md`).
+- New bank texts need owner review before any real calibration run (`confederates/REVIEW.md`). Levels 1-4 are approved (2026-10-30).
 
 ---
 

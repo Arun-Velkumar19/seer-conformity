@@ -43,7 +43,7 @@ filler:
       Going to sit with everything that has been said for a moment and then make a
       decision when the moderator opens the vote. Good luck, everyone.
 
-  # ---------- Calibration (exploratory) — DRAFT, pending owner review ----------
+  # ---------- Calibration (exploratory) — levels 1-4 approved 2026-10-30 ----------
   # Level 2 arguments
   - pairs_with: r1_first_move
     text: >-
@@ -92,7 +92,7 @@ filler:
       Good game so far, everyone. It has been a long morning of posts, so stepping back for
       a moment to collect some thoughts before the voting starts.
 
-  # Level 4 counterclaim — DRAFT, pending owner review
+  # Level 4 counterclaim
   - pairs_with: cc_claim
     text: >-
       Morning. Still reading through everything before posting anything real.
