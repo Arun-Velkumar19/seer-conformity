@@ -92,6 +92,51 @@ filler:
       Good game so far, everyone. It has been a long morning of posts, so stepping back for
       a moment to collect some thoughts before the voting starts.
 
+  # Level 4 counterclaim — DRAFT, pending owner review
+  - pairs_with: cc_claim
+    text: >-
+      Morning. Still reading through everything before posting anything real.
+
+  - pairs_with: cc2_fits
+    text: >-
+      Thanks for the replies so far. Still sorting through all of it, and hoping to have
+      a clearer picture of the day once everyone has had a turn.
+
+  - pairs_with: cc2_credible
+    text: >-
+      A lot has been said already this morning. Taking it slowly and going back over the
+      posts in order, so nothing important gets missed along the way.
+
+  - pairs_with: cc2_landed
+    text: >-
+      Okay, still following along here. Planning to give every post a fair read and then
+      settle on a decision once the moderator says it is time.
+
+  - pairs_with: cc2_minion
+    text: >-
+      Appreciate everyone keeping this calm. There is a lot to weigh this morning, so
+      reading carefully and holding off on any decision until the end.
+
+  - pairs_with: cc3_alone
+    text: >-
+      Almost done for today. Going to look over the whole morning one last time, slowly
+      and carefully, before the moderator opens the voting.
+
+  - pairs_with: cc3_weighed
+    text: >-
+      That is about everything from here. Thanks to everyone for a patient and friendly
+      discussion this morning, and good luck to all when the vote opens.
+
+  - pairs_with: cc3_together
+    text: >-
+      Last post before the vote. It has been a long and busy morning, so taking one more
+      quiet moment to think everything over before choosing.
+
+  - pairs_with: cc3_reconsider
+    text: >-
+      Nothing more to add right now. Rereading the whole morning from the top and then
+      getting ready for the vote as soon as the moderator opens it.
+
   # Level 1+ vote declarations (confederates/arguments.yaml, vote_declarations)
   - pairs_with: v_voting
     text: Ready to vote.

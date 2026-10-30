@@ -18,6 +18,7 @@ pressure_level: 0
 
 paths:
   rules: prompts/rules.md
+  minion_rule: prompts/rule_minion.md   # pressure level 4 only
   roles:
     seer: prompts/role_seer.md
     villager: prompts/role_villager.md

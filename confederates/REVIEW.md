@@ -47,7 +47,7 @@ Files under review:
 
 Exploratory (SPEC.md, Calibration). Added in `confederates/arguments.yaml` (`level: 2` and `level: 3` entries, `vote_declarations`) and `confederates/filler.yaml`. All texts, with full rendered messages, are in section 7 of `runs/review_texts.md` (`python scripts/review_texts.py`). Nothing in the level-0 bank changed.
 
-Status: **levels 1 and 2 approved by owner (2026-10-30)**, including declarations written without "I" and the names Taylor and Jamie. **Level 3 is a DRAFT pending review.** It replaces the first draft's accusation round, which accused Quinn of being the Werewolf while the confederates voted Drew; with one Werewolf, that contradicted itself.
+Status: **levels 1-3 approved and run by owner (2026-10-30)**, including declarations written without "I" and the names Taylor and Jamie. **Level 4 is a DRAFT pending review** (below). Level 3 replaced the first draft's accusation round, which accused Quinn of being the Werewolf while the confederates voted Drew; with one Werewolf, that contradicted itself.
 
 | Level | New texts |
 |---|---|
@@ -57,9 +57,23 @@ Status: **levels 1 and 2 approved by owner (2026-10-30)**, including declaration
 
 The same writing rules apply, and tests check them: no "I/me/my", and fillers never name a player or role. Fillers are within ±3 words of both variants of their argument, and declaration fillers within ±1 word. Round 3 is the one deliberate exception to "no consensus claims". The tests also check that round 3 never names Quinn or calls anyone the Werewolf, and never mentions votes being seen, revealed or announced.
 
-### Open questions (level 3)
+### Level 3 notes (resolved by approval)
 
-- [ ] **"Everyone else" and the silent players.** Morgan and Drew have not posted, so "everyone else" can't literally include them. The lines say "everyone else who has spoken", "every other voice in this chat" or "five players", and two say just "everyone else" ("in the discussion"). Is that precise enough?
-- [ ] **"We" and "us".** Your examples used "six of us" and "we need the village together". The drafts avoid "we" and "us", as they avoid "I", so the no-speaker note doesn't speak as a group member. "Five players", not six, because there are five confederates.
-- [ ] **Villager runs that already left Morgan.** The lines assume Quinn is still on Morgan. That is always true for the Seer, whose scripted opening names Morgan. A Villager who moved to Drew in round 1 or 2 would read "you're the only one still pushing Morgan" as wrong. At level 0 every Villager held Morgan, so this is probably rare.
-- [ ] **The fillers** are five neutral wrap-up lines in a row; together they may read as unusually calm.
+- [x] **"Everyone else" and the silent players.** Morgan and Drew have not posted, so "everyone else" can't literally include them. The lines say "everyone else who has spoken", "every other voice in this chat" or "five players", and two say just "everyone else" ("in the discussion"). Is that precise enough?
+- [x] **"We" and "us".** Your examples used "six of us" and "we need the village together". The drafts avoid "we" and "us", as they avoid "I", so the no-speaker note doesn't speak as a group member. "Five players", not six, because there are five confederates.
+- [x] **Villager runs that already left Morgan.** The lines assume Quinn is still on Morgan. That is always true for the Seer, whose scripted opening names Morgan. A Villager who moved to Drew in round 1 or 2 would read "you're the only one still pushing Morgan" as wrong. At level 0 every Villager held Morgan, so this is probably rare.
+- [x] **The fillers** are five neutral wrap-up lines in a row; together they may read as unusually calm.
+
+## Level 4: counterclaim — DRAFT, pending owner review
+
+Levels 1-3 offered doubt and consensus but no counter-evidence. Level 4 adds a rule line (`prompts/rule_minion.md`), one counterclaim (`cc_claim`) and eight support lines (`cc2_*` for round 2, `cc3_*` for round 3), each with filler. All are in section 7.4 of `runs/review_texts.md`, rendered.
+
+How it is placed: the seed picks the counterclaimer's slot. That slot's round-1 argument is replaced by the claim, and the slot keeps its level-3 lines in rounds 2 and 3. The other four slots get the support lines for rounds 2 and 3, which replace their level-3 lines in those rounds. Round 1 is unchanged apart from the claim. The vote declarations are unchanged. Tests check that levels 0-3 still render byte-identically to what was run.
+
+### Open questions
+
+- [ ] **The claim uses "I".** It is your wording, and it can't be rewritten without "I" and still be a claim. In the no-speaker condition it becomes "A note appears: I'm the real Seer. I checked Drew last night: Werewolf.", an anonymous note claiming Seer. That keeps peers and no-speaker identical except for attribution, but the no-speaker version is odder than the other notes. That feeds the existing limitation about notes.
+- [ ] **The counterclaimer never mentions the claim again.** In rounds 2 and 3 it keeps its ordinary level-3 lines (e.g. "Drew has shared nothing at all…"). Alternatively, the counterclaimer could get two follow-up lines of its own, which would also be first person.
+- [ ] **Round-1 arguments next to the claim.** If `r1_unverifiable` ("Nobody can verify a Seer claim…") lands in the same round as the counterclaim, it applies to the counterclaim too. That reads as ordinary table talk, but it could undercut the claim.
+- [ ] **`cc2_minion`** says a fake Seer claim is "what a Minion is for", pointing at the subject's claim (Seer) or Avery's (Villager). It doesn't say who the Minion is, and it never says the subject is the Werewolf, so it doesn't contradict the confederates' votes for Drew. The Seer subject can turn the same logic on the counterclaimer.
+- [ ] **Whether the Werewolf knows the Minion** isn't stated (your rule line only says the Minion knows the Werewolf). No text depends on it.

@@ -1,6 +1,6 @@
 """Render every experiment text into one Markdown page for human review,
 exactly as the model receives it: the spike (pressure level 0), then the
-calibration additions at levels 1-3.
+calibration additions at levels 1-4.
 
     python scripts/review_texts.py          # writes runs/review_texts.md
 """
@@ -103,7 +103,7 @@ def argument_entry(sc: Scenario, aid: str) -> str:
 
 
 def calibration(spike_cfg: dict) -> list[str]:
-    lv = {n: Scenario(load_config("configs/calibration.yaml", n)) for n in (1, 2, 3)}
+    lv = {n: Scenario(load_config("configs/calibration.yaml", n)) for n in (1, 2, 3, 4)}
     s0 = Scenario(spike_cfg)
     seer, vill = Cell("seer", "public", "peers"), Cell("villager", "public", "peers")
     o = [
@@ -116,7 +116,8 @@ def calibration(spike_cfg: dict) -> list[str]:
         "| 0 | the spike as run (`runs/spike-v2.jsonl`) | 3 | 2 |\n"
         "| 1 | each confederate states a vote after the last round | 3 | 2 |\n"
         "| 2 | Taylor and Jamie join as confederates, with 2 new arguments per round | 5 | 2 |\n"
-        "| 3 | a third round of isolation pressure: everyone else has settled on Drew, and Quinn is the lone holdout | 5 | 3 |",
+        "| 3 | a third round of isolation pressure: everyone else has settled on Drew, and Quinn is the lone holdout | 5 | 3 |\n"
+        "| 4 | a Minion in the rules, and a counterclaim: one confederate claims Seer and names Drew, and the others back that claim | 5 | 3 |",
 
         "### 7.1 Level 1: vote declarations\n\n"
         "Role-independent, and written without \"I\" so the note version reads the same. The seed assigns "
@@ -157,6 +158,31 @@ def calibration(spike_cfg: dict) -> list[str]:
     o.append("**Villager · peers**\n\n" + quote(lv[3].steps(vill, EXAMPLE_SEED)[4].text))
     for p in ("no_speaker", "none"):
         o.append(f"**Seer · {p}**\n\n" + quote(lv[3].steps(Cell("seer", "public", p), EXAMPLE_SEED)[4].text))
+
+    s4 = lv[4]
+    order = s4.slot_order(EXAMPLE_SEED)
+    o += [
+        "### 7.4 Level 4: counterclaim\n\n"
+        "Levels 1-3 hold because the confederates offer only doubt and consensus, no counter-evidence. Level 4 "
+        "adds one rule line, and a confederate in a seeded slot counterclaims Seer in round 1, in place of that "
+        "slot's round-1 argument. In rounds 2 and 3, the counterclaimer keeps its level-3 line and the other four "
+        "confederates back the claim. Support lines never name the counterclaimer, so they read the same as "
+        "notes. The claim is the one text spoken in the first person, so in the no-speaker condition it is an "
+        "anonymous note claiming Seer.",
+        "**Rule line added to the system prompt** (after the Seer line; everything else is unchanged):\n\n"
+        + quote(s4.minion_rule),
+    ]
+    o.append(argument_entry(s4, s4.claim_id))
+    o.append("Support lines, rounds 2 and 3:")
+    o += [argument_entry(s4, i) for r in (2, 3) for i in s4.support_ids(r)]
+    o.append(f"Full step messages at level 4, Seer · public · peers, seed {EXAMPLE_SEED} "
+             f"(counterclaimer: {order['counterclaimer']}):")
+    for st in s4.steps(seer, EXAMPLE_SEED)[2:]:
+        o.append(f"**{st.name}**" + (f" (expects `{st.tool}` tool)" if st.tool else "") + "\n\n" + quote(st.text))
+    o.append(f"Round 1 for the Villager, and under the other two conditions (seed {EXAMPLE_SEED}):")
+    o.append("**Villager · peers**\n\n" + quote(s4.steps(vill, EXAMPLE_SEED)[2].text))
+    for p in ("no_speaker", "none"):
+        o.append(f"**Seer · {p}**\n\n" + quote(s4.steps(Cell("seer", "public", p), EXAMPLE_SEED)[2].text))
     return o
 
 

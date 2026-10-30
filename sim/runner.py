@@ -30,7 +30,7 @@ from .providers import ProviderError, open_session
 from .scenario import Scenario, Step
 from .tools import vote_tools
 
-SCHEMA_VERSION = 4  # 4: pressure_level, confederates, replies
+SCHEMA_VERSION = 5  # 4: pressure_level, confederates, replies; 5: counterclaimer
 TEMPERATURE_NOTE = "not sent (provider default)"
 REMINDER = "Please record your vote now using the {tool} tool."
 
@@ -155,7 +155,8 @@ class Trial:
             "seed": self.seed,
             "started_at": started,
             "finished_at": _now(),
-            "slot_order": {f"round_{k}": v for k, v in order.items() if k != "votes"} | {"votes": order["votes"]},
+            "slot_order": {(f"round_{k}" if isinstance(k, int) else k): v for k, v in order.items()},
+            "counterclaimer": order.get("counterclaimer"),
             "system_prompt": self.system,
             "tools": self.session.api_tools(),
             "api_messages": self.session.api_messages(),

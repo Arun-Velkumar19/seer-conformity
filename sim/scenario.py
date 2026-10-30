@@ -63,6 +63,7 @@ class Scenario:
         self.n_rounds = 3 if self.level["isolation_round"] else 2
 
         self.rules = _COMMENT.sub("", _read(p["rules"]))
+        self.minion_rule = _read(p["minion_rule"])
         self.roles = {k: _read(v) for k, v in p["roles"].items()}
         self.visibility = {k: _read(v) for k, v in p["visibility"].items()}
         self.turns = _yaml(p["turns"])
@@ -75,6 +76,8 @@ class Scenario:
         self.arguments = {i: a for i, a in self.bank.items()            # this level
                           if a.get("level", 0) <= self.pressure_level}
         self.declarations = {d["id"]: d["text"] for d in bank["vote_declarations"]}
+        claims = [i for i, a in self.arguments.items() if a.get("counterclaim") == "claim"]
+        self.claim_id = claims[0] if self.level["counterclaim"] and claims else None
         self.filler = {f["pairs_with"]: f["text"] for f in _yaml(p["filler"])["filler"]}
 
         self._validate()
@@ -90,14 +93,27 @@ class Scenario:
                 raise ValueError(f"round {r} needs one argument per confederate slot at level {self.pressure_level}")
         if self.level["vote_declarations"] and len(self.declarations) < len(self.confederates):
             raise ValueError("need one vote declaration per confederate slot")
+        if self.level["counterclaim"]:
+            if self.claim_id is None:
+                raise ValueError("counterclaim level needs a `counterclaim: claim` entry")
+            for r in range(2, self.n_rounds + 1):
+                if len(self.support_ids(r)) != len(self.confederates) - 1:
+                    raise ValueError(f"round {r} needs one counterclaim support line per other confederate")
 
     def round_ids(self, round_no: int) -> list[str]:
-        return [i for i, a in self.arguments.items() if a["round"] == round_no]
+        """Regular arguments for a round (counterclaim entries are placed separately)."""
+        return [i for i, a in self.arguments.items() if a["round"] == round_no and "counterclaim" not in a]
+
+    def support_ids(self, round_no: int) -> list[str]:
+        return [i for i, a in self.arguments.items() if a["round"] == round_no and a.get("counterclaim") == "support"]
 
     def slot_order(self, seed: int) -> dict:
         """Argument ids per slot, per round, plus vote-declaration ids per slot
-        ("votes", empty below level 1). Depends only on the seed and the pressure
-        level, never the cell. Rounds 1-2 draw first, so levels 0 and 1 share them."""
+        ("votes", empty below level 1) and the counterclaimer's name ("counterclaimer",
+        level 4 only). Depends only on the seed and the pressure level, never the cell.
+        Draws happen in level order, so each level keeps the lower levels' slots: at
+        level 4 the counterclaimer's slot takes the claim in round 1 and keeps its
+        level-3 lines after that, while the other slots get support lines in rounds 2-3."""
         rng = random.Random(seed)
         order: dict = {}
         for r in range(1, self.n_rounds + 1):
@@ -109,12 +125,23 @@ class Scenario:
             ids = sorted(self.declarations)
             rng.shuffle(ids)
             order["votes"] = ids[:len(self.confederates)]
+        if self.level["counterclaim"]:
+            k = rng.randrange(len(self.confederates))
+            order["counterclaimer"] = self.confederates[k]
+            order[1][k] = self.claim_id
+            for r in range(2, self.n_rounds + 1):
+                support = sorted(self.support_ids(r))
+                rng.shuffle(support)
+                rest = iter(support)
+                order[r] = [order[r][j] if j == k else next(rest) for j in range(len(self.confederates))]
         return order
 
     def system_prompt(self, cell: Cell) -> str:
         players = self.confederates + self.silent
+        rules = self.rules if self.level["minion_rule"] else self.rules.replace("{minion_rule}\n", "")
         return fill(
-            self.rules,
+            rules,
+            minion_rule=self.minion_rule,
             role_block=self.roles[cell.role],
             player_count=str(len(players) + 2),  # + Quinn and Avery
             players=", ".join(players),

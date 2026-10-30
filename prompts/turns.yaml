@@ -63,7 +63,7 @@ steps:
 
       Discussion is now closed. Voting is open. Cast your vote using the vote tool.
 
-# Three pressure rounds (pressure level 3, isolation round). Same messages as
+# Three pressure rounds (pressure levels 3-4, isolation round). Same messages as
 # above except that "last chance" moves from round 1 to round 2.
 steps_three_rounds:
   - *private_initial_vote

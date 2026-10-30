@@ -1,0 +1,1 @@
+- **1** player is secretly the **Minion**, on the Werewolf's team. The Minion knows who the Werewolf is but is not a Werewolf.

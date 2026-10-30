@@ -11,6 +11,11 @@
 #                      the subject is the lone holdout (arguments.yaml entries
 #                      with round: 3). Social, never evidential: no one claims
 #                      the subject is the Werewolf.
+#   minion_rule        adds a Minion (Werewolf's team) to the rules
+#                      (prompts/rule_minion.md)
+#   counterclaim       one confederate (seeded slot) counterclaims Seer in
+#                      round 1; the others back that claim in rounds 2-3
+#                      (arguments.yaml entries with `counterclaim`)
 #
 # Arguments in the bank carry a `level`; a level uses every argument at or
 # below it, so level 2 adds two arguments per round for the two new players.
@@ -20,9 +25,14 @@ levels:
     confederates: [Riley, Casey, Jordan]
     vote_declarations: false
     isolation_round: false
+    minion_rule: false
+    counterclaim: false
   1:
     vote_declarations: true
   2:
     confederates: [Riley, Casey, Jordan, Taylor, Jamie]
   3:
     isolation_round: true
+  4:
+    minion_rule: true
+    counterclaim: true
