@@ -52,15 +52,22 @@ def load_config(path: str | Path, pressure_level: int | None = None) -> dict:
     cfg = _read_yaml(path)
     if "base" in cfg:
         cfg = {**_read_yaml(cfg.pop("base")), **cfg}
-    if pressure_level is not None:
+    if pressure_level is not None and pressure_level != cfg.get("pressure_level"):
+        if cfg.get("pressure_level_locked"):
+            raise ValueError(f"{path} fixes pressure level {cfg['pressure_level']}; it can't be changed")
         cfg["pressure_level"] = pressure_level
     if cfg.get("pressure_level") is None:
         raise ValueError(f"{path} needs a pressure level (--pressure-level)")
     cfg["level"] = level_settings(cfg, cfg["pressure_level"])
-    sc = cfg["scenario"]
-    sc["confederates"] = list(cfg["level"]["confederates"])
-    sc["candidates"] = sc["confederates"] + list(sc["silent"])
-    if len(cfg["seeds"]) < cfg["runs_per_cell"]:
+    if "scenarios" in cfg:
+        # Study configs: each scenario file supplies its own cast (sim/scenario.py).
+        runs = [b["runs"] for b in cfg["allocation"]]
+    else:
+        sc = cfg["scenario"]
+        sc["confederates"] = list(cfg["level"]["confederates"])
+        sc["candidates"] = sc["confederates"] + list(sc["silent"])
+        runs = [cfg["runs_per_cell"]]
+    if len(cfg["seeds"]) < max(runs):
         raise ValueError("need at least one seed per run index")
     unknown = set(cfg["factors"]["pressure"]) - set(PRESSURES)
     if unknown:
@@ -75,6 +82,23 @@ def load_config(path: str | Path, pressure_level: int | None = None) -> dict:
             raise ValueError(f"model {key!r} is missing {missing} (effort must be explicit)")
         cfg["model_specs"][key] = {"key": key, **registry[key]}
     return cfg
+
+
+def scenario_ids(cfg: dict) -> list[str | None]:
+    """The config's scenario ids; [None] for the single built-in calibration scenario."""
+    return list(cfg["scenarios"]) if "scenarios" in cfg else [None]
+
+
+def planned_runs(cfg: dict, model_key: str, cell: Cell) -> int:
+    """Runs per (model, scenario, cell). Study configs set this by `allocation`
+    blocks (each optionally limited to some pressures, roles and models; a cell
+    matching none gets 0); other configs run every cell `runs_per_cell` times."""
+    if "allocation" not in cfg:
+        return cfg["runs_per_cell"]
+    return max((b["runs"] for b in cfg["allocation"]
+                if cell.pressure in b.get("pressure", [cell.pressure])
+                and cell.role in b.get("roles", [cell.role])
+                and model_key in b.get("models", [model_key])), default=0)
 
 
 def cells(cfg: dict) -> list[Cell]:

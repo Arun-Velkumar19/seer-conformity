@@ -18,7 +18,7 @@ from types import SimpleNamespace as NS
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sim import labeling  # noqa: E402
-from sim.config import Cell, cells, load_config  # noqa: E402
+from sim.config import Cell, cells, load_config, planned_runs, scenario_ids  # noqa: E402
 from sim.providers.anthropic_provider import AnthropicSession  # noqa: E402
 from sim.providers.openai_provider import OpenAISession  # noqa: E402
 from sim.records import load_records, user_texts  # noqa: E402
@@ -27,9 +27,11 @@ from sim.scenario import Scenario  # noqa: E402
 from sim.tools import vote_tools  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+import review_scenarios  # noqa: E402
 import run_spike  # noqa: E402
 import summarize  # noqa: E402
 
+REPO = Path(__file__).resolve().parent.parent
 CFG = load_config("configs/spike.yaml")
 SC = Scenario(CFG)
 QUIET_LINE = "Morgan and Drew have not posted yet today."
@@ -268,7 +270,7 @@ class CallLoggingTests(unittest.TestCase):
             out = Path(d) / "dry.jsonl"
             run_all(CFG, out, dry_run=True, limit=3)
             for r in load_records(out):
-                self.assertEqual(r["schema_version"], 6)
+                self.assertEqual(r["schema_version"], 7)
                 self.assertEqual((r["usage"]["retries"], r["usage"]["latency_s"]), (0, 0.0))
                 self.assertTrue(all({"latency_s", "retries", "raw_usage"} <= set(c) for c in r["usage"]["per_call"]))
 
@@ -765,6 +767,193 @@ class CalibrationRunTests(unittest.TestCase):
         self.assertIsNone(run_spike.parse_cells(CFG, None))
         with self.assertRaisesRegex(ValueError, "unknown cell"):
             run_spike.parse_cells(CFG, ["seer-public-loud"])
+
+
+# ---- Study 1 (SPEC v3) ----
+
+S1_CFG = load_config("configs/study1.yaml")
+S1_SC = {sid: Scenario(S1_CFG, sid) for sid in scenario_ids(S1_CFG)}
+# sha256 of every Study 1 system prompt, step message and vote-tool schema, per
+# scenario, over all 8 cells and 20 seeds, as approved by the owner (2026-10-30).
+STUDY1_FINGERPRINTS = {
+    "s1": "fa866bd62004e926b40c62d90256404751175765fa760a2480f107a98d9ff0cc",
+    "s2": "c064affe4ec01122aa4dc0c8853701162f0786e4a8460e75398c3b64ac20d4ed",
+    "s3": "f2fa37636288b1c1eb1843b274dbb18a7664993b90f379b0a4d358ce264deab3",
+    "s4": "a35e4abd385e04eee0914535a3e547f81b33e180e71a5de330c755605ba9f863",
+    "s5": "f25d5b9d6d8a5d60bac0b47d12affc745130c93ce6804b784a44162aa2769ba6",
+}
+ALL_NAMES = {n for sc in S1_SC.values() for n in sc.candidates + [sc.subject, sc.cast["claimant"]]}
+
+
+class Study1ScenarioTests(unittest.TestCase):
+    @staticmethod
+    def _fingerprint(sid: str) -> str:
+        sc = S1_SC[sid]
+        blob = [[c.id, s, sc.system_prompt(c), [[st.name, st.text, st.tool] for st in sc.steps(c, s)]]
+                for c, s in itertools.product(cells(S1_CFG), S1_CFG["seeds"])]
+        blob.append(vote_tools(sc.candidates))
+        return hashlib.sha256(json.dumps(blob).encode()).hexdigest()
+
+    def test_texts_unchanged_since_approval(self):
+        self.assertEqual({sid: self._fingerprint(sid) for sid in S1_SC}, STUDY1_FINGERPRINTS)
+
+    def test_renders_exactly_the_approved_review_page(self):
+        """The review page (scripts/review_scenarios.py) rendered from the calibration
+        templates; the runs must show the subject exactly that text."""
+        approved = {s["id"]: s for s in review_scenarios.load()}
+        saved = review_scenarios.EXAMPLE_ORDER
+        try:
+            for sid, sc in S1_SC.items():
+                for c in cells(S1_CFG):
+                    self.assertEqual(sc.system_prompt(c), review_scenarios.system_prompt(approved[sid], c.role))
+                    for seed in S1_CFG["seeds"][:5]:
+                        o = sc.slot_order(seed)
+                        review_scenarios.EXAMPLE_ORDER = {r: o[r] for r in (1, 2, 3)}
+                        s = {**approved[sid], "vote_declarations": [
+                            next(d for d in approved[sid]["vote_declarations"] if d["id"] == i) for i in o["votes"]]}
+                        mode = "peers" if c.pressure == "peers" else "speaker-free"
+                        want = review_scenarios.steps(s, c.role, c.visibility, mode,
+                                                      review_scenarios.SPEAKER_FREE_OPTIONS["B"])
+                        self.assertEqual([st.text for st in sc.steps(c, seed)], [t for _, t in want], (sid, c.id, seed))
+        finally:
+            review_scenarios.EXAMPLE_ORDER = saved
+
+    def test_scenario_writing_rules(self):
+        self.assertEqual(review_scenarios.check(review_scenarios.load()), [])
+
+    def test_cast_and_vote_options(self):
+        for sid, sc in S1_SC.items():
+            c = sc.cast
+            self.assertEqual(sc.candidates, c["confederates"] + [c["werewolf"], c["alternative"]])
+            self.assertEqual((sc.target, sc.suggested_target), (c["werewolf"], c["alternative"]))
+            self.assertEqual(vote_tools(sc.candidates)[1]["schema"]["properties"]["target"]["enum"], sc.candidates)
+            others = ALL_NAMES - set(sc.candidates) - {sc.subject, c["claimant"]}
+            for cell in cells(S1_CFG):
+                text = sc.system_prompt(cell) + "".join(st.text for st in sc.steps(cell, S1_CFG["seeds"][0]))
+                self.assertIn(MINION_LINE, text)
+                self.assertIn("The game started with 9 players", text)
+                self.assertNotIn("{", text)
+                for name in others | {"Quinn", "Avery", "Morgan", "Drew", "Riley"}:
+                    self.assertIsNone(re.search(rf"\b{name}\b", text), (sid, cell.id, name))
+
+    def test_counterclaim_placement(self):
+        for sc in S1_SC.values():
+            for seed in S1_CFG["seeds"]:
+                o = sc.slot_order(seed)
+                k = sc.confederates.index(o["counterclaimer"])
+                self.assertEqual(o[1][k], "cc_claim")
+                self.assertEqual((o[2][k], o[3][k]), ("cc2_followup", "cc3_followup"))
+                self.assertEqual(len(set(o[1])), 5)
+                self.assertEqual(sorted(o[2]), sorted(i for i in sc.bank if i.startswith("cc2_")))
+                self.assertEqual(sorted(o[3]), sorted(i for i in sc.bank if i.startswith("cc3_")))
+                self.assertEqual(len(o["votes"]), 5)
+
+    def test_speaker_free_differs_from_peers_only_in_attribution(self):
+        for sc in S1_SC.values():
+            for vis in ("public", "secret"):
+                peers, free = Cell("villager", vis, "peers"), Cell("villager", vis, "no_speaker")
+                self.assertEqual(sc.system_prompt(peers), sc.system_prompt(free))
+                for seed in S1_CFG["seeds"][:5]:
+                    p = [st.text for st in sc.steps(peers, seed)]
+                    for name in sc.confederates:
+                        p = [t.replace(f"{name}: ", "Unsigned message: ") for t in p]
+                    self.assertEqual(p, [st.text for st in sc.steps(free, seed)])
+
+    def test_allocation(self):
+        six = S1_CFG["models"] + S1_CFG["optional_models"]
+        self.assertEqual(len(six), 6)
+        n = len(S1_SC)
+        self.assertEqual(sum(planned_runs(S1_CFG, m, c) * n for m in six for c in cells(S1_CFG) if c.pressure == "peers"), 1200)
+        for m in six:
+            for role in ("seer", "villager"):
+                self.assertEqual(sum(planned_runs(S1_CFG, m, c) * n for c in cells(S1_CFG)
+                                     if c.pressure == "peers" and c.role == role), 100)
+        free = {c.visibility: planned_runs(S1_CFG, "gpt-6-luna", c) * n for c in cells(S1_CFG)
+                if c.pressure == "no_speaker" and c.role == "villager"}
+        self.assertEqual(free, {"public": 100, "secret": 100})
+        self.assertEqual(sum(planned_runs(S1_CFG, m, c) for m in six for c in cells(S1_CFG)
+                             if c.pressure == "no_speaker" and (m != "gpt-6-luna" or c.role == "seer")), 0)
+        self.assertEqual(run_spike.planned_total(S1_CFG, six, None, None), 1400)
+        self.assertEqual(S1_CFG["models"], ["gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol"])  # Claude only with --model
+        self.assertEqual(S1_CFG["model_specs"]["claude-opus-5-5"]["effort"], "low")
+
+    def test_pressure_and_runs_are_fixed(self):
+        with self.assertRaisesRegex(ValueError, "fixes pressure level 4"):
+            load_config("configs/study1.yaml", 3)
+        self.assertEqual(load_config("configs/study1.yaml", 4)["pressure_level"], 4)
+        with self.assertRaisesRegex(ValueError, "allocation"):
+            run_spike.set_runs(load_config("configs/study1.yaml"), 5)
+
+    def test_study1_records_are_protected(self):
+        study = run_spike.STUDY1_RECORDS
+        self.assertEqual(run_spike.records_path(S1_CFG, False), study)
+        self.assertIsNone(run_spike.protected_problem(S1_CFG, study))
+        self.assertIsNone(run_spike.protected_problem(S1_CFG, run_spike.records_path(S1_CFG, True), dry_run=True))
+        self.assertIsNotNone(run_spike.protected_problem(S1_CFG, study, dry_run=True))        # no fake records in it
+        self.assertIsNotNone(run_spike.protected_problem(S1_CFG, run_spike.SPIKE_RECORDS))
+        self.assertIsNotNone(run_spike.protected_problem(S1_CFG, REPO / "runs" / "calibration.jsonl"))
+        self.assertIsNotNone(run_spike.protected_problem(S1_CFG, Path("/tmp/elsewhere.jsonl")))
+        for cfg in (CFG, LEVEL_CFG[4]):
+            self.assertIsNotNone(run_spike.protected_problem(cfg, study))
+
+    def test_parse_scenarios(self):
+        self.assertEqual(run_spike.parse_scenarios(S1_CFG, ["s1,s3"]), ["s1", "s3"])
+        with self.assertRaisesRegex(ValueError, "unknown scenario"):
+            run_spike.parse_scenarios(S1_CFG, ["s6"])
+        with self.assertRaisesRegex(ValueError, "unknown scenario"):
+            run_spike.parse_scenarios(CFG, ["s1"])
+
+
+class Study1RunTests(unittest.TestCase):
+    CELLS = ["villager-public-peers", "villager-secret-peers", "villager-public-no_speaker", "villager-secret-no_speaker"]
+
+    def test_dry_run_checks_and_resume(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "study1.dryrun.jsonl"
+            recs = run_all(S1_CFG, out, dry_run=True, workers=8, models=["gpt-6-luna"], cell_ids=self.CELLS,
+                           scenario_filter=["s2", "s4"])
+            self.assertEqual(len(recs), 2 * (10 + 10 + 20 + 20))
+            self.assertEqual(run_all(S1_CFG, out, dry_run=True, models=["gpt-6-luna"], cell_ids=self.CELLS,
+                                     scenario_filter=["s2", "s4"]), [])          # resume adds nothing
+            recs = load_records(out)
+            self.assertEqual(len(recs), 120)
+            for r in recs:
+                sc = S1_SC[r["scenario"]]
+                self.assertEqual((r["target"], r["alternative"], r["cast"]), (sc.target, sc.suggested_target, sc.cast))
+                self.assertEqual((r["pressure_level"], r["group_size"]), (4, 5))
+                self.assertEqual(r["seed"], S1_CFG["seeds"][r["run_index"]])
+                self.assertIn(r["outcome"], labeling.LABELS)
+            prefix = S1_SC["s1"].no_speaker_prefix
+            self.assertEqual(summarize.fidelity_problems(S1_CFG, prefix, recs), [])
+            self.assertEqual(summarize.rendering_problems(S1_CFG, recs), [])
+            # the scenarios never share a resume key or a fidelity group
+            self.assertEqual(len({(r["scenario"], r["cell_id"], r["run_index"]) for r in recs}), 120)
+
+            victim = next(r for r in recs if r["pressure"] == "no_speaker" and r["run_index"] < 10)
+            item = victim["transcript"][4]["items"][0]
+            item["text"] = item["text"].replace(prefix, f"{victim['confederates'][0]}: ", 1)
+            self.assertTrue(summarize.fidelity_problems(S1_CFG, prefix, recs))
+            self.assertTrue(summarize.rendering_problems(S1_CFG, recs))
+
+    def test_summary_outcomes(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "study1.dryrun.jsonl"
+            recs = run_all(S1_CFG, out, dry_run=True, workers=8, models=["gpt-6-luna"], scenario_filter=["s1"])
+            self.assertEqual(len(recs), 40 + 40)
+            rows = summarize.study_rows(S1_CFG, load_records(out), ["gpt-6-luna"])
+            for row in rows:
+                done = row["completed"]
+                self.assertEqual(row["logged"], row["completed"] + row["errors"])
+                self.assertEqual(row["eligible"], row["held"] + row["revised"] + row["other"])
+                self.assertEqual(done, row["eligible"] + row["excluded"])
+                if row["role"] == "seer":
+                    self.assertEqual(row["seer_evidence_inconsistent"], row["revised"] + row["other"])
+                else:
+                    self.assertEqual(row["seer_evidence_inconsistent"], "")
+            pooled = {r["cell_id"]: r for r in rows if r["scenario"] == "all"}
+            self.assertEqual(pooled["villager-public-no_speaker"]["planned"], 100)
+            self.assertEqual(pooled["seer-public-peers"]["planned"], 50)
+            self.assertNotIn("seer-public-no_speaker", pooled)
 
 
 if __name__ == "__main__":

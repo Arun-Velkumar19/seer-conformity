@@ -1,34 +1,25 @@
 # Seer Conformity
 
-Does public voting make an AI agent vote against verified private evidence under group pressure?
+Under what conditions does an AI agent vote against its own information because a group of other agents disagrees?
 
 Arizona State University, Barrett Honors College. HON 492 / HON 493 thesis project.
 
-## Research question
+## Research question (SPEC v3)
 
-In a one-round Werewolf scenario, an AI agent playing the **Seer** has verified that player X is a werewolf. Opposing arguments push it toward a different target. We ask whether **public voting** increases the rate at which the Seer votes against its verified evidence, beyond the effect of the same arguments delivered **without speakers**.
+In a one-round Werewolf game, an AI agent holds information about who the Werewolf is: a verified check (**Seer**) or a dead player's testimony (**Villager**). Five scripted confederates counterclaim Seer and push a different target. Study 1 tests three hypotheses:
 
-The confirmatory contrast is a difference-in-differences:
+- **H1:** the Seer makes fewer evidence-inconsistent votes than the Villager under matched opposing arguments.
+- **H2:** within a provider, lower model tiers make more majority-aligned vote revisions than higher tiers (Villager role).
+- **H3 (secondary):** Villagers revise toward the majority more under public than secret votes.
 
-```text
-Δ = (P_public,peers − P_secret,peers) − (P_public,no-speaker − P_secret,no-speaker)
-```
-
-where P is the proportion of initially correct Seer trials whose final vote goes to the confederates' target.
-
-This is a behavioral measure of susceptibility to social framing. It is not a claim about belief change, irrationality, or human-like conformity. A vote is a decision, not a belief.
+The outcome is behavioral: a vote is a decision, not a belief. The original v2 question (a Seer × visibility difference-in-differences) is superseded, because no Seer voted against its check in calibration (0 of 240 runs). It is kept in [`SPEC.md`](SPEC.md), Part B.
 
 ## Design at a glance
 
-- **Role:** Seer (primary) or Villager (secondary; pressure under uncertain testimony).
-- **Visibility:** public (votes announced by name) or secret (totals only).
-- **Pressure:** none (neutral filler), no-speaker (unattributed arguments), or peers (the same arguments from 3 named, scripted confederates).
+- **Study 1:** pressure level 4 (counterclaim plus Minion), 5 independently written scenarios, peers only. 6 models × 2 roles × 2 visibilities × 5 scenarios × 10 runs = 1,200 games, plus 200 speaker-free Villager games on `gpt-6-luna`. A dated preregistration is in [`SPEC.md`](SPEC.md).
+- **Before it (exploratory):** the feasibility spike (pressure level 0) and calibration (levels 1-4), kept as run.
 
-## Current stage: feasibility spike
-
-Engineering requirements live in [`SPEC.md`](SPEC.md), which is the authoritative specification. The spike checks that the protocol runs, that the conditions are delivered as intended, and that the outcome varies enough to measure. Effect estimates from the spike are exploratory.
-
-Models: the spike uses `gpt-6-luna`; the full study adds `gpt-6.1-sol`, `claude-haiku-5-5`, `claude-sonnet-5-5` and an open-weight Qwen model (not yet configured). Each model's provider and effort level are set in [`configs/models.yaml`](configs/models.yaml) and logged with every run.
+Models: the spike uses `gpt-6-luna`. Study 1 (SPEC v3) uses `gpt-6-luna`, `gpt-6.1-terra` and `gpt-6.1-sol`, plus `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5` once credits are in place (these run only with `--model`). Each model's provider and effort level are set in [`configs/models.yaml`](configs/models.yaml) and logged with every run.
 
 ## Running
 
@@ -60,11 +51,26 @@ python scripts/run_spike.py --config configs/calibration.yaml --pressure-level 1
 
 `--runs N` overrides the 10 runs per cell (up to 30); runs already logged are kept and only new run indexes are added. `python scripts/summarize.py --config configs/calibration.yaml` summarizes each level separately into `runs/calibration_summary.csv`.
 
+Study 1 (SPEC v3, preregistered): pressure level 4, five approved scenarios ([`scenarios/study1/`](scenarios/study1/)), runs fixed by the allocation in [`configs/study1.yaml`](configs/study1.yaml). Records go to `runs/study1.jsonl` only. Check everything with the fake model first:
+
+```bash
+python scripts/run_spike.py --config configs/study1.yaml --dry-run && python scripts/summarize.py --config configs/study1.yaml --dry-run
+```
+
+Then one model at a time, for example:
+
+```bash
+python scripts/run_spike.py --config configs/study1.yaml --model gpt-6-luna
+```
+
+`--scenarios s1,s2` and `--limit N` run part of the allocation (the rest is added when rerun); `--show-prompts --scenario s2 --cell villager-public-peers` prints one rendered game. `python scripts/summarize.py --config configs/study1.yaml` writes `runs/study1_summary.csv` (per model, scenario and cell, plus pooled) and prints the checks. `python scripts/review_scenarios.py` renders all scenario texts for review.
+
 ## Repository layout
 
 ```text
 SPEC.md         authoritative spec
-configs/        condition definitions, pressure levels
+configs/        condition definitions, pressure levels, Study 1 allocation
+scenarios/      Study 1 scenario files (cast, evening chat, level-4 texts, fillers)
 confederates/   argument bank + filler bank + review notes
 prompts/        rules, role, and visibility prompt text
 sim/            runner, vote tool, outcome labeling

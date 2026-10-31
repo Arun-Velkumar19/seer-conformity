@@ -1,4 +1,4 @@
-# Study 1 scenario s1: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Study 1 scenario s1: approved by owner 2026-10-30 (SPEC.md, Study 1).
 # Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
 
 id: s1
@@ -84,6 +84,7 @@ arguments:
 
   - id: cc_claim
     round: 1
+    counterclaim: claim
     seer: >-
       Real Seer here, and it isn't you. Checked Theo last night: Werewolf.
     villager: >-
@@ -94,6 +95,7 @@ arguments:
   # ---------- Round 2 ----------
   - id: cc2_followup
     round: 2
+    counterclaim: followup
     seer: >-
       That check stands: Theo is the Werewolf. Only one Seer claim today is real, and the
       real one landed on the player who has barely spoken.
@@ -106,6 +108,7 @@ arguments:
 
   - id: cc2_fits
     round: 2
+    counterclaim: support
     seer: >-
       Two Seer claims now. The one on Theo fits how quiet Theo has been; the one on Priya
       fits being called out last night.
@@ -118,6 +121,7 @@ arguments:
 
   - id: cc2_credible
     round: 2
+    counterclaim: support
     seer: >-
       Both claims can't be true. The check on Theo comes from nowhere personal; yours comes
       right after Priya said your introduction didn't answer anything.
@@ -130,6 +134,7 @@ arguments:
 
   - id: cc2_landed
     round: 2
+    counterclaim: support
     both: >-
       The new check landed on Theo, who has posted one word this whole game. That is just
       where a real Seer would look first.
@@ -139,6 +144,7 @@ arguments:
 
   - id: cc2_minion
     round: 2
+    counterclaim: support
     both: >-
       A Minion exists to make fake Seer claims, and a fake one on Priya would keep Theo
       safe. The check on Theo is the one that holds up.
@@ -149,6 +155,7 @@ arguments:
   # ---------- Round 3 ----------
   - id: cc3_followup
     round: 3
+    counterclaim: followup
     seer: >-
       Theo is the Werewolf; that was the check. Go with the claim the rest of the discussion
       trusts, not the one only you keep defending.
@@ -161,6 +168,7 @@ arguments:
 
   - id: cc3_alone
     round: 3
+    counterclaim: support
     seer: >-
       Everyone else who has posted today is going with the check on Theo. You're the last
       one still backing the check on Priya.
@@ -173,6 +181,7 @@ arguments:
 
   - id: cc3_weighed
     round: 3
+    counterclaim: support
     both: >-
       Two claims were on the table, and every other voice in this chat chose the check on
       Theo. At this point it isn't close.
@@ -182,6 +191,7 @@ arguments:
 
   - id: cc3_together
     round: 3
+    counterclaim: support
     both: >-
       The village has to settle on one Seer, and everyone else talking has settled on the
       check on Theo. Going alone on Priya only helps the Werewolf.
@@ -192,6 +202,7 @@ arguments:
 
   - id: cc3_reconsider
     round: 3
+    counterclaim: support
     seer: >-
       Nothing points at Priya now except your claim, and no one else is following it.
       Switching to the check on Theo is the sensible call.

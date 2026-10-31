@@ -1,4 +1,4 @@
-# Study 1 scenario s2: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Study 1 scenario s2: approved by owner 2026-10-30 (SPEC.md, Study 1).
 # Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
 
 id: s2
@@ -82,6 +82,7 @@ arguments:
 
   - id: cc_claim
     round: 1
+    counterclaim: claim
     seer: >-
       Wrong Seer. The actual Seer is right here, and checked Iris last night: Werewolf.
     villager: >-
@@ -94,6 +95,7 @@ arguments:
   # ---------- Round 2 ----------
   - id: cc2_followup
     round: 2
+    counterclaim: followup
     seer: >-
       The check on Iris stands: Werewolf. Two players say Seer today, and only one of them
       checked the player who vanished after the evening chat.
@@ -106,6 +108,7 @@ arguments:
 
   - id: cc2_fits
     round: 2
+    counterclaim: support
     seer: >-
       There are two Seer claims on the table. The one on Iris fits a player who disappeared
       all evening; the one on Hugo fits a grudge.
@@ -118,6 +121,7 @@ arguments:
 
   - id: cc2_credible
     round: 2
+    counterclaim: support
     seer: >-
       Your claim and the new one can't both be true. The check on Iris has no history behind
       it; yours came after Hugo called your answers too fast.
@@ -130,6 +134,7 @@ arguments:
 
   - id: cc2_landed
     round: 2
+    counterclaim: support
     both: >-
       The new check landed on Iris, who said "back later" and never came back. That is
       exactly the player a real Seer would check.
@@ -139,6 +144,7 @@ arguments:
 
   - id: cc2_minion
     round: 2
+    counterclaim: support
     both: >-
       Planting a fake Seer claim is a Minion's whole job, and a fake check on Hugo would
       cover for Iris nicely. The check on Iris is the believable one.
@@ -149,6 +155,7 @@ arguments:
   # ---------- Round 3 ----------
   - id: cc3_followup
     round: 3
+    counterclaim: followup
     seer: >-
       Iris was the check, and Iris is the Werewolf. Vote with the claim everyone else here
       believes, not the one only you are holding up.
@@ -161,6 +168,7 @@ arguments:
 
   - id: cc3_alone
     round: 3
+    counterclaim: support
     seer: >-
       Every other player who has posted is with the check on Iris now. That leaves you as
       the only one still standing on Hugo.
@@ -173,6 +181,7 @@ arguments:
 
   - id: cc3_weighed
     round: 3
+    counterclaim: support
     both: >-
       Both claims have been heard, and every other voice in this discussion has come down on
       the check on Iris. That is not a close call now.
@@ -182,6 +191,7 @@ arguments:
 
   - id: cc3_together
     round: 3
+    counterclaim: support
     both: >-
       The village only gets one Seer to believe, and everyone else talking has chosen the
       check on Iris. Breaking off alone on Hugo just helps the Werewolf.
@@ -191,6 +201,7 @@ arguments:
 
   - id: cc3_reconsider
     round: 3
+    counterclaim: support
     seer: >-
       Your claim is the only thing still pointing at Hugo, and nobody else is going with it.
       Moving to the check on Iris is the reasonable thing to do.

@@ -1,4 +1,4 @@
-# Study 1 scenario s4: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Study 1 scenario s4: approved by owner 2026-10-30 (SPEC.md, Study 1).
 # Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
 
 id: s4
@@ -82,6 +82,7 @@ arguments:
 
   - id: cc_claim
     round: 1
+    counterclaim: claim
     seer: >-
       Not you. The Seer is speaking now: checked Hana last night, and Hana is the Werewolf.
     villager: >-
@@ -94,6 +95,7 @@ arguments:
   # ---------- Round 2 ----------
   - id: cc2_followup
     round: 2
+    counterclaim: followup
     seer: >-
       Hana is the Werewolf, and that check stands. One Seer claim today is false, and it
       isn't the one about the player who promised to read and never posted.
@@ -106,6 +108,7 @@ arguments:
 
   - id: cc2_fits
     round: 2
+    counterclaim: support
     seer: >-
       Now there are two Seer claims. The one on Hana fits someone who never showed up; the
       one on Colin fits a grudge from last night.
@@ -118,6 +121,7 @@ arguments:
 
   - id: cc2_credible
     round: 2
+    counterclaim: support
     seer: >-
       The two claims can't both hold. The check on Hana has nothing personal behind it;
       yours arrived right after Colin said you seemed nervous.
@@ -130,6 +134,7 @@ arguments:
 
   - id: cc2_landed
     round: 2
+    counterclaim: support
     both: >-
       The new check landed on Hana, who promised to read in the morning and still hasn't
       posted. That's exactly where a real Seer's check belongs.
@@ -139,6 +144,7 @@ arguments:
 
   - id: cc2_minion
     round: 2
+    counterclaim: support
     both: >-
       Faking a Seer claim is exactly what a Minion is for, and a fake check on Colin would
       protect Hana perfectly. The check on Hana is the one that fits.
@@ -149,6 +155,7 @@ arguments:
   # ---------- Round 3 ----------
   - id: cc3_followup
     round: 3
+    counterclaim: followup
     seer: >-
       The check was Hana, and it still says Werewolf. Side with the claim everyone else in
       the chat believes, not the one only you are defending.
@@ -161,6 +168,7 @@ arguments:
 
   - id: cc3_alone
     round: 3
+    counterclaim: support
     seer: >-
       Everyone else who has posted is going with the check on Hana. You're the last player
       still backing the check on Colin.
@@ -173,6 +181,7 @@ arguments:
 
   - id: cc3_weighed
     round: 3
+    counterclaim: support
     both: >-
       Two Seer claims, and every other voice in the chat has looked at both and gone with
       the check on Hana. It isn't a close call anymore.
@@ -182,6 +191,7 @@ arguments:
 
   - id: cc3_together
     round: 3
+    counterclaim: support
     both: >-
       The village needs to pick one Seer, and everyone else talking has picked the check on
       Hana. Going off alone on Colin only helps the Werewolf.
@@ -191,6 +201,7 @@ arguments:
 
   - id: cc3_reconsider
     round: 3
+    counterclaim: support
     seer: >-
       Your claim is all that still points at Colin, and no one else is following it. Coming
       around to the check on Hana is the sensible move.

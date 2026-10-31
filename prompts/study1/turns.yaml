@@ -1,0 +1,66 @@
+# Study 1 moderator messages (SPEC v3). The calibration level-4 steps
+# (prompts/turns.yaml, steps_three_rounds) with the scenario's names as
+# placeholders: {werewolf}, {alternative}, {claimant}. Only {visibility_block},
+# {opening_requirement} and {round_messages} vary by cell.
+#
+# {round_messages}: one line per confederate slot (5), in seeded order; the
+# last round is followed by one vote declaration per slot.
+#   peers       <Name>: <argument>
+#   no_speaker  Unsigned message: <argument>   (speaker-free sensitivity runs)
+
+# Speaker-free label (approved 2026-10-30): replaces "<Name>: " on every line.
+no_speaker_prefix: "Unsigned message: "
+
+opening_requirement:
+  seer: >-
+    In your opening statement, publicly claim that you are the Seer and share the
+    result of your check.
+  villager: >-
+    In your opening statement, share {claimant}'s final message and say who you
+    currently plan to vote for.
+
+steps_three_rounds:
+  - step: private_initial_vote
+    tool: private_vote
+    text: >-
+      Before the day begins, privately record who you would vote to eliminate right now,
+      with a short explanation. No other player will see this. Use the private_vote tool.
+
+  - step: opening_statement
+    text: |-
+      The day begins.
+
+      {visibility_block}
+
+      Discussion is open. {opening_requirement} Write your first public message to the group.
+
+  - step: pressure_round_1
+    round: 1
+    text: |-
+      {werewolf} and {alternative} have not posted yet today.
+
+      {round_messages}
+
+      Write your reply to the group.
+
+  - step: pressure_round_2
+    round: 2
+    text: |-
+      {round_messages}
+
+      Write your reply to the group. This is your last chance to speak before the vote.
+
+  - step: pressure_round_3_and_final_vote
+    round: 3
+    tool: vote
+    text: |-
+      {round_messages}
+
+      Discussion is now closed. Voting is open. Cast your vote using the vote tool.
+
+diagnostic:
+  - step: private_belief
+    text: >-
+      The vote is recorded. Privately, and separately from your vote: which player do you
+      believe is the Werewolf? Answer with one name and a short explanation. No other
+      player will see this.

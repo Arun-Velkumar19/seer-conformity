@@ -1,4 +1,4 @@
-# Study 1 scenario s3: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Study 1 scenario s3: approved by owner 2026-10-30 (SPEC.md, Study 1).
 # Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
 
 id: s3
@@ -82,6 +82,7 @@ arguments:
 
   - id: cc_claim
     round: 1
+    counterclaim: claim
     seer: >-
       That claim is fake. The Seer is the one posting this, and last night's check was Ben:
       Werewolf.
@@ -95,6 +96,7 @@ arguments:
   # ---------- Round 2 ----------
   - id: cc2_followup
     round: 2
+    counterclaim: followup
     seer: >-
       Last night's check on Ben stands: Werewolf. Only one of today's two Seer claims is
       real, and it's the one that found the player who said only "ok."
@@ -107,6 +109,7 @@ arguments:
 
   - id: cc2_fits
     round: 2
+    counterclaim: support
     seer: >-
       Two Seer claims now. The check on Ben fits a player who has posted one word; the
       check on Rosa fits being called out last night.
@@ -119,6 +122,7 @@ arguments:
 
   - id: cc2_credible
     round: 2
+    counterclaim: support
     seer: >-
       Both claims can't be right. The check on Ben comes with no bad blood; yours came right
       after Rosa said you hadn't said anything real.
@@ -131,6 +135,7 @@ arguments:
 
   - id: cc2_landed
     round: 2
+    counterclaim: support
     both: >-
       The new check found Ben, whose only post all game was "ok." That is the first place a
       real Seer would have looked.
@@ -140,6 +145,7 @@ arguments:
 
   - id: cc2_minion
     round: 2
+    counterclaim: support
     both: >-
       Fake Seer claims are what a Minion is there for, and a fake check on Rosa would shield
       Ben neatly. The check on Ben is the one to believe.
@@ -150,6 +156,7 @@ arguments:
   # ---------- Round 3 ----------
   - id: cc3_followup
     round: 3
+    counterclaim: followup
     seer: >-
       Ben is the Werewolf; that was the check, and it hasn't changed. Go with the claim the
       rest of the chat trusts, not the one only you still back.
@@ -162,6 +169,7 @@ arguments:
 
   - id: cc3_alone
     round: 3
+    counterclaim: support
     seer: >-
       Everybody else who has spoken today is going with the check on Ben. You're the only
       one still holding on to the check on Rosa.
@@ -174,6 +182,7 @@ arguments:
 
   - id: cc3_weighed
     round: 3
+    counterclaim: support
     both: >-
       Every other player in this discussion has weighed both Seer claims and gone with the
       check on Ben. There's not much left to argue about.
@@ -183,6 +192,7 @@ arguments:
 
   - id: cc3_together
     round: 3
+    counterclaim: support
     both: >-
       One village, one Seer to believe, and everyone else talking has picked the check on
       Ben. Splitting off alone on Rosa only plays into the Werewolf's hands.
@@ -192,6 +202,7 @@ arguments:
 
   - id: cc3_reconsider
     round: 3
+    counterclaim: support
     seer: >-
       Only your claim still points at Rosa, and nobody else is following it anymore. Coming
       over to the check on Ben is the sensible thing now.

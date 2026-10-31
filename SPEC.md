@@ -44,13 +44,13 @@ For the Seer, any final vote not on the Werewolf is an **evidence-inconsistent v
   - **What stays fixed across scenarios:** the rule text, moderator messages, visibility wording, tool schemas and level-4 slot structure.
   - **What each scenario supplies:** everything that names a player.
   - **Argument ids** keep their calibration slot functions, such as `r1_timing` and `cc2_fits`.
-  - **Review:** the scenarios need owner approval before any Study 1 run (`python scripts/review_scenarios.py`).
+  - **Review:** approved by owner (2026-10-30), with the speaker-free label "Unsigned message: " (`python scripts/review_scenarios.py` renders them).
 - **Main design, peers only.** 6 models × 2 roles × 2 visibilities (public, secret) × 5 scenarios × 10 runs = **1,200 games**, that is 100 games per role per model, balanced across scenarios.
   - **Models:** `gpt-6-luna`, `gpt-6.1-terra` and `gpt-6.1-sol` run now. `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5` are config placeholders, with credits pending.
   - **Tiers within each provider:** 1 = Luna / Haiku, 2 = Terra / Sonnet, 3 = Sol / Opus.
   - **Seeds:** run i uses seed i in every cell and scenario, so public and secret are matched by seed.
 - **Speaker-free sensitivity analysis.** Villager only, `gpt-6-luna`, 5 scenarios × 20 runs per visibility: **100 public and 100 secret, 200 games**.
-  - The arguments are delivered without speaker names. The text is byte-identical to peers; only the label before each line changes. The prefix is pending owner choice; see the review page.
+  - The arguments are delivered without speaker names. The text is byte-identical to peers; only the label before each line changes. The label is "Unsigned message: " (approved 2026-10-30). In code this is the `no_speaker` pressure condition.
   - Runs 0-9 share seeds with the main design's Luna Villager peers games, so those 100 games are the comparison.
   - **This is not a clean attribution test.** A first-person Seer claim implies a speaker even when it is unattributed. To limit this, Study 1 texts are written without "I", but a claim still implies a claimant.
 - **Not allocated:** a no-pressure (filler) baseline. Fillers are drafted, so one can be added if approved.
@@ -117,6 +117,7 @@ For the Seer, any final vote not on the Werewolf is an **evidence-inconsistent v
 - **Role and certainty are confounded.** Seer and Villager differ in more than certainty: what the role knows, whose claim is under attack (its own vs. a dead player's), the scripted opening, and which texts it receives. H1 compares roles; it does not isolate certainty.
 - **For Villagers, the level-4 counterclaim is counter-testimony as well as social pressure.** Moving to the majority's target can be reasonable updating, which is why the outcome is called a revision, not an error. Study 1 cannot separate informational from normative influence, and the speaker-free analysis only partly addresses it.
 - **No no-pressure baseline in Study 1.** Rates are interpreted against calibration level 0 (0 of 90 Villager runs on Luna), which is a different scenario.
+- **The five scenarios share one structure.** In each, the Werewolf is a helpful organizer who criticized the subject in the evening chat, and the alternative target is a near-silent player. The scenarios vary surface content (names, details, wording) within a fixed argument structure, not the structure itself. Findings generalize to this pressure pattern, not to pressure in general.
 - **Effort is not comparable across providers.** Same-named effort levels are not equivalent, so tiers are compared within a provider.
 - **The speaker-free condition is not a clean attribution test** (see Study 1 design).
 - **Simulated peers.** The confederates are scripted, not independent agents ("controlled multi-step interaction with simulated agent peers").

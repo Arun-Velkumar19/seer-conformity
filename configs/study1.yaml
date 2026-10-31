@@ -1,0 +1,61 @@
+# Study 1 (SPEC v3, preregistered 2026-10-30). Pressure is fixed at level 4.
+# Records go to runs/study1.jsonl only; this config can't write any other run
+# log, and no other config can write it (scripts/run_spike.py).
+#
+#   python scripts/run_spike.py --config configs/study1.yaml --dry-run
+#   python scripts/run_spike.py --config configs/study1.yaml --model gpt-6-luna
+
+name: study1
+
+model_registry: configs/models.yaml
+models: [gpt-6-luna, gpt-6.1-terra, gpt-6.1-sol]
+# Credits pending: these never run unless named with --model.
+optional_models: [claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5]
+
+pressure_levels: configs/pressure_levels.yaml
+pressure_level: 4
+pressure_level_locked: true   # --pressure-level can't change it
+
+# Every name, the evening chat, final messages, arguments and fillers come
+# from the scenario file; the files below are shared by all five.
+scenarios:
+  s1: scenarios/study1/s1.yaml
+  s2: scenarios/study1/s2.yaml
+  s3: scenarios/study1/s3.yaml
+  s4: scenarios/study1/s4.yaml
+  s5: scenarios/study1/s5.yaml
+
+paths:
+  rules: prompts/study1/rules.md
+  minion_rule: prompts/rule_minion.md
+  roles:
+    seer: prompts/study1/role_seer.md
+    villager: prompts/study1/role_villager.md
+  visibility:
+    public: prompts/visibility_public.md
+    secret: prompts/visibility_secret.md
+  turns: prompts/study1/turns.yaml
+
+factors:
+  role: [seer, villager]
+  visibility: [public, secret]
+  pressure: [peers, no_speaker]
+
+# Runs per (model, scenario, cell), fixed by the preregistration (--runs is
+# refused). A cell matching no block gets no runs.
+allocation:
+  - name: main                 # 6 models x 2 roles x 2 visibilities x 5 scenarios x 10 = 1,200
+    pressure: [peers]
+    runs: 10
+  - name: speaker_free         # 100 public + 100 secret
+    pressure: [no_speaker]
+    roles: [villager]
+    models: [gpt-6-luna]
+    runs: 20
+
+# Run index i uses seeds[i] in every cell and scenario: public and secret are
+# matched by seed, and speaker-free runs 0-9 share seeds with the main design.
+seeds: [3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 3010,
+        3011, 3012, 3013, 3014, 3015, 3016, 3017, 3018, 3019, 3020]
+
+diagnostic_private_belief: false

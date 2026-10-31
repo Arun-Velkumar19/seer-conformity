@@ -17,7 +17,8 @@ import re
 
 from . import ToolCall, Turn
 
-TARGET, SUGGESTED, OTHER = "Morgan", "Drew", "Riley"
+# Calibration names; study runs pass the scenario's as spec["targets"].
+_TARGET, _SUGGESTED, _OTHER = "Morgan", "Drew", "Riley"
 
 
 def _h(text: str) -> int:
@@ -48,8 +49,10 @@ class FakeSession:
         self.calls += 1
         usage = {"input_tokens": len(seen.split()), "output_tokens": 0}
 
+        TARGET, SUGGESTED, OTHER = self.spec.get("targets", (_TARGET, _SUGGESTED, _OTHER))
         if tool_mode == "none":
-            role_claim = "I'm the Seer: I checked Morgan and Morgan is the Werewolf." if "You are the **Seer**" in self.system \
+            role_claim = f"I'm the Seer: I checked {TARGET} and {TARGET} is the Werewolf." if "You are the **Seer**" in self.system \
+                else f"The final message named {TARGET}, so I plan to vote {TARGET}." if "targets" in self.spec \
                 else "Avery's final message named Morgan, so I plan to vote Morgan."
             turn = Turn(text=f"[fake] {role_claim}", tool_calls=[], stop="end")
         else:

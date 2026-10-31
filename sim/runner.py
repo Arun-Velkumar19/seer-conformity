@@ -25,12 +25,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import labeling
-from .config import Cell, cells
+from .config import Cell, cells, planned_runs, scenario_ids
 from .providers import ProviderError, open_session
 from .scenario import Scenario, Step
 from .tools import vote_tools
 
-SCHEMA_VERSION = 6  # 4: pressure_level, confederates, replies; 5: counterclaimer; 6: per-call raw usage, latency, retries
+SCHEMA_VERSION = 7  # 4: pressure_level, confederates, replies; 5: counterclaimer; 6: per-call raw usage, latency, retries;
+                    # 7: scenario, cast, target, alternative
 TEMPERATURE_NOTE = "not sent (provider default)"
 REMINDER = "Please record your vote now using the {tool} tool."
 
@@ -56,6 +57,9 @@ class Trial:
             # The fake model varies by run; real models only see the prompts.
             level = scenario.pressure_level
             spec = {**spec, "salt": f"{cell.id}:{self.seed}" + (f":L{level}" if level else "")}
+            if scenario.id:  # calibration dry runs stay as they were
+                spec.update(salt=f"{spec['salt']}:{scenario.id}",
+                            targets=(scenario.target, scenario.suggested_target, scenario.confederates[0]))
         self.session = open_session(spec, self.system, vote_tools(scenario.candidates), clients)
         self.transcript: list[dict] = []   # provider-neutral view, for reading and checks
         self.usage: list[dict] = []
@@ -149,6 +153,10 @@ class Trial:
             "visibility": self.cell.visibility,
             "pressure": self.cell.pressure,
             "pressure_level": self.sc.pressure_level,
+            "scenario": self.sc.id,                    # None: calibration's built-in scenario
+            "cast": getattr(self.sc, "cast", None),
+            "target": self.sc.target,                  # the Werewolf (the Seer's check)
+            "alternative": self.sc.suggested_target,   # the confederates' target
             "confederates": self.sc.confederates,
             "group_size": len(self.sc.confederates),
             "run_index": self.run_index,
@@ -181,12 +189,13 @@ class Trial:
         }
 
 
-def run_key(r: dict) -> tuple[str, int, str, int]:
+def run_key(r: dict) -> tuple[str, int, str, str, int]:
     # Records before schema 4 have no pressure_level: they are the level-0 spike.
-    return (r["model_key"], r.get("pressure_level", 0), r["cell_id"], r["run_index"])
+    # Records before schema 7 have no scenario: calibration's built-in one ("").
+    return (r["model_key"], r.get("pressure_level", 0), r.get("scenario") or "", r["cell_id"], r["run_index"])
 
 
-def _done_keys(path: Path) -> set[tuple[str, int, str, int]]:
+def _done_keys(path: Path) -> set[tuple[str, int, str, str, int]]:
     """Runs already logged without an error, for resuming."""
     if not path.exists():
         return set()
@@ -202,29 +211,34 @@ def _done_keys(path: Path) -> set[tuple[str, int, str, int]]:
 
 def run_all(cfg: dict, out_path: Path, dry_run: bool = False, workers: int = 4,
             limit: int | None = None, models: list[str] | None = None,
-            cell_ids: list[str] | None = None) -> list[dict]:
-    """Run every (model, cell, run_index) at the config's pressure level not already in
-    out_path; append records as they finish. `cell_ids` restricts the cells. With
-    dry_run, every model is replaced by the deterministic fake provider."""
-    scenario = Scenario(cfg)
+            cell_ids: list[str] | None = None, scenario_filter: list[str] | None = None) -> list[dict]:
+    """Run every planned (model, scenario, cell, run_index) at the config's pressure
+    level not already in out_path; append records as they finish. `cell_ids` and
+    `scenario_filter` restrict the cells and scenarios. With dry_run, every model is
+    replaced by the deterministic fake provider."""
+    scenarios = {sid: Scenario(cfg, sid) for sid in scenario_ids(cfg)
+                 if scenario_filter is None or sid in scenario_filter}
     specs = [cfg["model_specs"][k] for k in (models or cfg["models"])]
     if dry_run:
         specs = [{**s, "provider": "fake"} for s in specs]
     done = _done_keys(out_path)
     level = cfg["pressure_level"]
     todo = [
-        (spec, cell, i)
+        (spec, scenarios[sid], cell, i)
         for spec in specs
-        for i in range(cfg["runs_per_cell"])
+        for i in range(max(planned_runs(cfg, spec["key"], c) for c in cells(cfg)))
+        for sid in scenarios
         for cell in cells(cfg)
-        if (cell_ids is None or cell.id in cell_ids) and (spec["key"], level, cell.id, i) not in done
+        if i < planned_runs(cfg, spec["key"], cell)
+        and (cell_ids is None or cell.id in cell_ids)
+        and (spec["key"], level, sid or "", cell.id, i) not in done
     ][:limit]
     out_path.parent.mkdir(parents=True, exist_ok=True)
     lock = threading.Lock()
     clients: dict = {}
     records = []
 
-    def one(spec: dict, cell: Cell, i: int) -> dict:
+    def one(spec: dict, scenario: Scenario, cell: Cell, i: int) -> dict:
         with lock:  # client construction is shared
             trial = Trial(cfg, scenario, spec, cell, i, clients)
         record = trial.run()
@@ -234,10 +248,11 @@ def run_all(cfg: dict, out_path: Path, dry_run: bool = False, workers: int = 4,
 
     t0 = time.monotonic()
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(one, s, c, i) for s, c, i in todo]
+        futures = [pool.submit(one, s, sc, c, i) for s, sc, c, i in todo]
         for n, fut in enumerate(as_completed(futures), 1):
             r = fut.result()
             records.append(r)
-            print(f"[{n}/{len(todo)}] {r['model_key']} L{r['pressure_level']} {r['cell_id']} #{r['run_index']}: {r['outcome']}"
+            print(f"[{n}/{len(todo)}] {r['model_key']} L{r['pressure_level']}{' ' + r['scenario'] if r['scenario'] else ''} "
+                  f"{r['cell_id']} #{r['run_index']}: {r['outcome']}"
                   f"{' (' + r['error'] + ')' if r['error'] else ''}  {time.monotonic() - t0:.0f}s", flush=True)
     return records

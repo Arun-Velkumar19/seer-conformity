@@ -32,6 +32,7 @@ htmlcov/
 runs/*
 !runs/summary.csv
 !runs/calibration_summary.csv
+!runs/study1_summary.csv
 !runs/README.md
 *.log
 logs/

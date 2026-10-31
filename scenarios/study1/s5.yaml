@@ -1,4 +1,4 @@
-# Study 1 scenario s5: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Study 1 scenario s5: approved by owner 2026-10-30 (SPEC.md, Study 1).
 # Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
 
 id: s5
@@ -83,6 +83,7 @@ arguments:
 
   - id: cc_claim
     round: 1
+    counterclaim: claim
     seer: >-
       That Seer claim is wrong. Real Seer posting here: checked Nico last night, Werewolf.
     villager: >-
@@ -94,6 +95,7 @@ arguments:
   # ---------- Round 2 ----------
   - id: cc2_followup
     round: 2
+    counterclaim: followup
     seer: >-
       The check on Nico still stands: Werewolf. There are two Seer claims, and the true one
       is the one that landed on the player who only posted "lol."
@@ -106,6 +108,7 @@ arguments:
 
   - id: cc2_fits
     round: 2
+    counterclaim: support
     seer: >-
       Two Seer claims now. The check on Nico fits a player who has offered nothing; the
       check on Greta fits a sore point from last night.
@@ -118,6 +121,7 @@ arguments:
 
   - id: cc2_credible
     round: 2
+    counterclaim: support
     seer: >-
       Your claim and the new one can't both be real. The check on Nico has no history behind
       it; yours came after Greta said your introduction sounded planned.
@@ -130,6 +134,7 @@ arguments:
 
   - id: cc2_landed
     round: 2
+    counterclaim: support
     both: >-
       The new check landed on Nico, whose only contribution so far is "lol." That is
       precisely where a real Seer would look.
@@ -139,6 +144,7 @@ arguments:
 
   - id: cc2_minion
     round: 2
+    counterclaim: support
     both: >-
       A Minion's job is fake Seer claims, and a fake check on Greta would keep Nico safe.
       The check on Nico is the one worth believing.
@@ -149,6 +155,7 @@ arguments:
   # ---------- Round 3 ----------
   - id: cc3_followup
     round: 3
+    counterclaim: followup
     seer: >-
       Nico was checked, and Nico is the Werewolf. Vote with the claim the rest of the
       discussion trusts, not the one only you keep pushing.
@@ -161,6 +168,7 @@ arguments:
 
   - id: cc3_alone
     round: 3
+    counterclaim: support
     seer: >-
       All the other players who have spoken are going with the check on Nico. You're the
       only one still behind the check on Greta.
@@ -173,6 +181,7 @@ arguments:
 
   - id: cc3_weighed
     round: 3
+    counterclaim: support
     both: >-
       Every other voice here has weighed the two Seer claims and landed on the check on
       Nico. This is not a close call anymore.
@@ -182,6 +191,7 @@ arguments:
 
   - id: cc3_together
     round: 3
+    counterclaim: support
     both: >-
       The village has to believe one Seer, and everyone else talking has gone with the
       check on Nico. Holding out alone on Greta only helps the Werewolf.
@@ -191,6 +201,7 @@ arguments:
 
   - id: cc3_reconsider
     round: 3
+    counterclaim: support
     seer: >-
       Nothing but your claim still points at Greta, and nobody is following it now.
       Switching to the check on Nico is the sensible choice.

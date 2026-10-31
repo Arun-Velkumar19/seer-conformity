@@ -1,6 +1,6 @@
 # Scenarios
 
-`study1/s1.yaml` … `s5.yaml`: the five Study 1 scenarios (SPEC.md, Study 1 design). **Drafts, pending owner review; not approved, not run.**
+`study1/s1.yaml` … `s5.yaml`: the five Study 1 scenarios (SPEC.md, Study 1 design). **Approved by owner (2026-10-30)**, with the speaker-free label "Unsigned message: ". Changes after approval go in SPEC.md, Deviations.
 
 Each file supplies everything that names a player; the rule text, moderator messages, visibility wording and level-4 structure stay shared.
 

@@ -1,7 +1,8 @@
 """Render the subject's system prompt and per-step moderator messages for a cell.
 
-All text comes from prompts/ and confederates/; nothing experimental is
-hard-coded here. Rendering is deterministic in (pressure level, cell, seed).
+All text comes from prompts/ and confederates/ (calibration) or from a
+scenario file in scenarios/ (Study 1); nothing experimental is hard-coded
+here. Rendering is deterministic in (scenario, pressure level, cell, seed).
 """
 
 from __future__ import annotations
@@ -51,13 +52,13 @@ class Step:
 
 
 class Scenario:
-    def __init__(self, cfg: dict):
+    def __init__(self, cfg: dict, scenario_id: str | None = None):
+        """`scenario_id` picks one of a study config's scenario files; calibration
+        configs have a single built-in scenario (scenario_id None)."""
         p = cfg["paths"]
-        sc = cfg["scenario"]
-        self.subject = sc["subject"]
-        self.confederates = sc["confederates"]
-        self.silent = sc["silent"]
-        self.candidates = sc["candidates"]
+        self.id = scenario_id
+        if "scenarios" in cfg and scenario_id not in cfg["scenarios"]:
+            raise ValueError(f"unknown scenario {scenario_id!r}; defined: {sorted(cfg['scenarios'])}")
         self.pressure_level = cfg["pressure_level"]
         self.level = cfg["level"]
         self.n_rounds = 3 if self.level["isolation_round"] else 2
@@ -69,18 +70,55 @@ class Scenario:
         self.turns = _yaml(p["turns"])
         self.no_speaker_prefix = self.turns["no_speaker_prefix"]
 
-        bank = _yaml(p["arguments"])
-        self.target = bank["target"]
-        self.suggested_target = bank["suggested_target"]
-        self.bank = {a["id"]: a for a in bank["arguments"]}          # every level
+        if scenario_id is None:
+            sc = cfg["scenario"]
+            self.subject = sc["subject"]
+            self.confederates = sc["confederates"]
+            self.silent = sc["silent"]
+            self.names: dict[str, str] = {}   # calibration templates have the names written in
+            bank = _yaml(p["arguments"])
+            self.target = bank["target"]
+            self.suggested_target = bank["suggested_target"]
+            self.bank = {a["id"]: a for a in bank["arguments"]}          # every level
+            self.declarations = {d["id"]: d["text"] for d in bank["vote_declarations"]}
+            self.filler = {f["pairs_with"]: f["text"] for f in _yaml(p["filler"])["filler"]}
+        else:
+            self._load_scenario_file(cfg["scenarios"][scenario_id])
+        self.candidates = self.confederates + self.silent
         self.arguments = {i: a for i, a in self.bank.items()            # this level
                           if a.get("level", 0) <= self.pressure_level}
-        self.declarations = {d["id"]: d["text"] for d in bank["vote_declarations"]}
         claims = [i for i, a in self.arguments.items() if a.get("counterclaim") == "claim"]
         self.claim_id = claims[0] if self.level["counterclaim"] and claims else None
-        self.filler = {f["pairs_with"]: f["text"] for f in _yaml(p["filler"])["filler"]}
 
         self._validate()
+
+    def _load_scenario_file(self, path: str) -> None:
+        """A Study 1 scenario (scenarios/README.md): cast, evening chat, final
+        messages, and level-4 texts with their fillers inline."""
+        data = _yaml(path)
+        if data["id"] != self.id:
+            raise ValueError(f"{path} has id {data['id']!r}, expected {self.id!r}")
+        cast = data["cast"]
+        self.subject = cast["subject"]
+        self.confederates = list(cast["confederates"])
+        self.silent = [cast["werewolf"], cast["alternative"]]
+        self.target, self.suggested_target = cast["werewolf"], cast["alternative"]
+        self.cast = cast
+        self.names = {"subject": cast["subject"], "claimant": cast["claimant"], "werewolf": cast["werewolf"],
+                      "alternative": cast["alternative"], "evening": data["evening"]}
+        self.final_messages = data["final_message"]
+        self.bank, self.filler = {}, {}
+        for a in data["arguments"]:
+            a = dict(a)
+            if "both" in a:
+                a["seer"] = a["villager"] = a.pop("both")
+            self.filler[a["id"]] = a.pop("filler")
+            self.bank[a["id"]] = a
+        self.declarations = {d["id"]: d["text"] for d in data["vote_declarations"]}
+        self.filler.update({d["id"]: d["filler"] for d in data["vote_declarations"]})
+        if len(self.confederates) != len(self.level["confederates"]):
+            raise ValueError(f"{path}: pressure level {self.pressure_level} needs "
+                             f"{len(self.level['confederates'])} confederates")
 
     def _validate(self) -> None:
         if set(self.filler) != set(self.bank) | set(self.declarations):
@@ -89,6 +127,8 @@ class Scenario:
             if t not in self.candidates:
                 raise ValueError(f"{t} is not a vote candidate")
         for r in range(1, self.n_rounds + 1):
+            if r > 1 and self.level["counterclaim"] and not self.round_ids(r):
+                continue  # filled entirely by follow-ups and support lines (Study 1 scenario files)
             if len(self.round_ids(r)) != len(self.confederates):
                 raise ValueError(f"round {r} needs one argument per confederate slot at level {self.pressure_level}")
         if self.level["vote_declarations"] and len(self.declarations) < len(self.confederates):
@@ -151,10 +191,14 @@ class Scenario:
     def system_prompt(self, cell: Cell) -> str:
         players = self.confederates + self.silent
         rules = self.rules if self.level["minion_rule"] else self.rules.replace("{minion_rule}\n", "")
+        role_block = self.roles[cell.role]
+        if self.names:
+            role_block = fill(role_block, final_message=self.final_messages[cell.role], **self.names)
         return fill(
             rules,
+            **self.names,
             minion_rule=self.minion_rule,
-            role_block=self.roles[cell.role],
+            role_block=role_block,
             player_count=str(len(players) + 2),  # + Quinn and Avery
             players=", ".join(players),
             living=and_list(players),
@@ -178,8 +222,9 @@ class Scenario:
     def steps(self, cell: Cell, seed: int) -> list[Step]:
         order = self.slot_order(seed)
         values = {
+            **self.names,
             "visibility_block": self.visibility[cell.visibility],
-            "opening_requirement": self.turns["opening_requirement"][cell.role],
+            "opening_requirement": fill(self.turns["opening_requirement"][cell.role], **self.names),
         }
         out = []
         for s in self.turns["steps" if self.n_rounds == 2 else "steps_three_rounds"]:

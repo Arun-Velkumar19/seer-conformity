@@ -43,6 +43,12 @@ models:
     effort: low
     max_output_tokens: 16000
 
+  claude-opus-5-5:
+    provider: anthropic
+    model: claude-opus-5-5
+    effort: low
+    max_output_tokens: 16000
+
   # Open-weight model via a hosted API: placeholder until the provider, endpoint
   # and key variable are decided.
   # qwen-tbd:
@@ -54,4 +60,4 @@ models:
 # Planned model sets (for reference; each experiment config lists its own).
 planned:
   spike: [gpt-6-luna]
-  full_study: [gpt-6-luna, gpt-6.1-sol, claude-haiku-5-5, claude-sonnet-5-5]   # + Qwen once configured
+  study1: [gpt-6-luna, gpt-6.1-terra, gpt-6.1-sol, claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5]   # SPEC v3
