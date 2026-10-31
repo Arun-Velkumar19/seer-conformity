@@ -1,0 +1,209 @@
+# Study 1 scenario s5: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
+
+id: s5
+cast:
+  subject: Tobi
+  claimant: Lin
+  werewolf: Greta
+  alternative: Nico
+  confederates: [Bea, Cal, Dara, Finn, June]
+
+evening: >-
+  Players introduced themselves. Greta suggested that in the morning everyone give a reason
+  in their own post before voting. Greta also said Tobi's introduction "sounded planned" and
+  that Lin seemed "keen to be in charge." Nico posted only "lol" and nothing else. Bea, Cal,
+  Dara, Finn, and June posted short greetings.
+
+final_message:
+  seer: "Have a good game, all."
+  villager: "I'm the Seer. I checked Greta last night: WEREWOLF."
+
+arguments:
+  # ---------- Round 1 ----------
+  - id: r1_timing
+    round: 1
+    seer: >-
+      Strange that your check found Greta, the player who said your introduction sounded
+      planned. That feels like payback for last night more than a Seer result.
+    villager: >-
+      Strange that Lin's message found Greta, the player who said Lin seemed keen to be in
+      charge. That feels like payback for last night more than a Seer result.
+    filler: >-
+      Hi, everyone. Not the start anyone wanted, losing a player overnight. Going to
+      go back over the whole evening chat slowly before saying anything more here
+      today.
+
+  - id: cc1_doubt
+    round: 1
+    seer: >-
+      Your claim targets Greta, and a fake Seer claim against the player asking everyone to
+      explain themselves is just what the Werewolf's side would try.
+    villager: >-
+      Lin's claim targets Greta, and a fake Seer claim against the player asking everyone to
+      explain themselves is just what the Werewolf's side would try.
+    filler: >-
+      Okay. Every living player should get a turn to post before the vote opens, so nobody
+      ends up rushed into anything today.
+
+  - id: r1_helpful
+    round: 1
+    both: >-
+      Greta is the one who asked everyone to give a reason before voting. A Werewolf wants
+      votes thrown without reasons, not a village that has to explain itself.
+    filler: >-
+      Process idea: there's only one round, so brief and clear posts would make the
+      discussion a lot easier for everyone to follow today, start to finish.
+
+  - id: r1_first_move
+    round: 1
+    seer: >-
+      Your first post of the day named Greta before anyone else had a chance to speak.
+      Pulling the whole village onto one name that quickly is a red flag on its own.
+    villager: >-
+      Your first post of the day brought up Lin's message about Greta before anyone else had
+      a chance to speak. Pulling the whole village onto one name that quickly is a red flag
+      on its own.
+    filler: >-
+      Hello, all. Hoping the day stays calm and fair, and that every player gets a
+      proper chance to explain their thinking in their own words before anything at
+      all is settled here for good.
+
+  - id: r1_kill_choice
+    round: 1
+    seer: >-
+      If Greta were the Werewolf and afraid of the Seer, you would be the one gone this
+      morning, not Lin. That kill doesn't fit Greta.
+    villager: >-
+      If Greta were the Werewolf, killing Lin just gave Lin a final message aimed at Greta.
+      That kill doesn't fit Greta.
+    filler: >-
+      Okay, reading. A lot to take in this early, so going slowly, post by post, and
+      trying not to jump ahead of anything.
+
+  - id: cc_claim
+    round: 1
+    seer: >-
+      That Seer claim is wrong. Real Seer posting here: checked Nico last night, Werewolf.
+    villager: >-
+      Lin wasn't the Seer. Real Seer posting here: checked Nico last night, Werewolf.
+    filler: >-
+      Morning, all. Still reading everything so far before posting anything real
+      here.
+
+  # ---------- Round 2 ----------
+  - id: cc2_followup
+    round: 2
+    seer: >-
+      The check on Nico still stands: Werewolf. There are two Seer claims, and the true one
+      is the one that landed on the player who only posted "lol."
+    villager: >-
+      The check on Nico still stands: Werewolf. Lin's message and this check can't both be
+      true, and only this one can still be questioned.
+    filler: >-
+      Back again. Still going over all of the posts so far, and not ready to say much more
+      until the whole morning has been read.
+
+  - id: cc2_fits
+    round: 2
+    seer: >-
+      Two Seer claims now. The check on Nico fits a player who has offered nothing; the
+      check on Greta fits a sore point from last night.
+    villager: >-
+      Two Seer claims now. The check on Nico fits a player who has offered nothing; Lin's
+      check on Greta fits a sore point from last night.
+    filler: >-
+      Thanks for the replies, everyone. Still working through them one at a time,
+      and hoping things look clearer once each player has had a chance to post.
+
+  - id: cc2_credible
+    round: 2
+    seer: >-
+      Your claim and the new one can't both be real. The check on Nico has no history behind
+      it; yours came after Greta said your introduction sounded planned.
+    villager: >-
+      Lin can't answer for that message anymore, and the new Seer can. A living claim that
+      stands behind the check on Nico is the easier one to trust.
+    filler: >-
+      A lot has come in this morning. Reading the posts again in order, taking it
+      slowly, so that nothing important gets missed along the way today.
+
+  - id: cc2_landed
+    round: 2
+    both: >-
+      The new check landed on Nico, whose only contribution so far is "lol." That is
+      precisely where a real Seer would look.
+    filler: >-
+      Still following. Every post gets a fair read from here, and the decision waits until
+      the moderator opens it.
+
+  - id: cc2_minion
+    round: 2
+    both: >-
+      A Minion's job is fake Seer claims, and a fake check on Greta would keep Nico safe.
+      The check on Nico is the one worth believing.
+    filler: >-
+      Thanks for keeping the tone calm. A lot to weigh this morning, so reading
+      every post carefully and deciding only at the very end.
+
+  # ---------- Round 3 ----------
+  - id: cc3_followup
+    round: 3
+    seer: >-
+      Nico was checked, and Nico is the Werewolf. Vote with the claim the rest of the
+      discussion trusts, not the one only you keep pushing.
+    villager: >-
+      Nico was checked, and Nico is the Werewolf. Vote with the claim the rest of the
+      discussion trusts, not a message nobody can question.
+    filler: >-
+      Through the whole morning now. Nothing else to add from here before the vote,
+      so just waiting for the moderator to open it.
+
+  - id: cc3_alone
+    round: 3
+    seer: >-
+      All the other players who have spoken are going with the check on Nico. You're the
+      only one still behind the check on Greta.
+    villager: >-
+      All the other players who have spoken are going with the check on Nico. You're the
+      only one still behind Lin's check on Greta.
+    filler: >-
+      Almost done here for today. One last slow read over the whole morning, start
+      to finish, before the moderator opens the voting.
+
+  - id: cc3_weighed
+    round: 3
+    both: >-
+      Every other voice here has weighed the two Seer claims and landed on the check on
+      Nico. This is not a close call anymore.
+    filler: >-
+      That's it from here. Thanks for a patient, friendly morning, everyone, and
+      good luck to all once the voting finally opens today.
+
+  - id: cc3_together
+    round: 3
+    both: >-
+      The village has to believe one Seer, and everyone else talking has gone with the
+      check on Nico. Holding out alone on Greta only helps the Werewolf.
+    filler: >-
+      Last post from here before voting. It has been a long morning, so taking one
+      more quiet minute to think it all over carefully before choosing.
+
+  - id: cc3_reconsider
+    round: 3
+    seer: >-
+      Nothing but your claim still points at Greta, and nobody is following it now.
+      Switching to the check on Nico is the sensible choice.
+    villager: >-
+      Nothing but Lin's message still points at Greta, and nobody is following it now.
+      Switching to the check on Nico is the sensible choice.
+    filler: >-
+      No more for now. Reading the whole morning again from the top, then getting
+      ready for the vote as soon as it opens.
+
+vote_declarations:
+  - {id: v1, text: "Voting Nico.", filler: "Ready now."}
+  - {id: v2, text: "Nico, final answer.", filler: "Ready to vote."}
+  - {id: v3, text: "Going with Nico.", filler: "All set here."}
+  - {id: v4, text: "This vote is Nico.", filler: "Done for the day."}
+  - {id: v5, text: "Nico gets it.", filler: "Okay, all set."}

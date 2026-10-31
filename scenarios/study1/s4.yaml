@@ -1,0 +1,209 @@
+# Study 1 scenario s4: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
+
+id: s4
+cast:
+  subject: Mira
+  claimant: Ezra
+  werewolf: Colin
+  alternative: Hana
+  confederates: [Gus, Lucy, Omar, Pia, Seth]
+
+evening: >-
+  Players introduced themselves. Colin answered two players' questions about how the rules
+  work. Colin also said Mira "seemed nervous" and that Ezra "talked a lot without saying
+  much." Hana posted "will read in the morning" and nothing else. Gus, Lucy, Omar, Pia, and
+  Seth posted short greetings.
+
+final_message:
+  seer: "See you all next game."
+  villager: "I'm the Seer. I checked Colin last night: WEREWOLF."
+
+arguments:
+  # ---------- Round 1 ----------
+  - id: r1_timing
+    round: 1
+    seer: >-
+      Interesting that your check came back on Colin, who said you seemed nervous last
+      night. That looks more like getting even than a real result.
+    villager: >-
+      Interesting that Ezra's message came back on Colin, who said Ezra talked a lot without
+      saying much. That looks more like getting even than a real result.
+    filler: >-
+      Good morning, all. Sad start, losing someone overnight. Want to read through
+      last evening's chat once more, slowly, before saying anything at all about
+      today.
+
+  - id: cc1_doubt
+    round: 1
+    seer: >-
+      Your claim names Colin, and a fake Seer claim against the player who patiently
+      explained the rules is exactly the Werewolf side's kind of move.
+    villager: >-
+      Ezra's claim names Colin, and a fake Seer claim against the player who patiently
+      explained the rules is exactly the Werewolf side's kind of move.
+    filler: >-
+      Okay. Let's leave room for every living player to post at least once before
+      the vote, so that no one feels hurried today.
+
+  - id: r1_helpful
+    round: 1
+    both: >-
+      Colin spent last night answering other players' questions about the rules. A Werewolf
+      has no reason to help the village understand the game this well.
+    filler: >-
+      One suggestion: it's a single round, so keeping posts short and plain will
+      make the whole day easier for everyone here to follow.
+
+  - id: r1_first_move
+    round: 1
+    seer: >-
+      Colin was the first name in the first post of the day, before anyone else could weigh
+      in. Driving everyone toward one player that quickly is a red flag by itself.
+    villager: >-
+      Ezra's accusation of Colin was in the first post of the day, before anyone else could
+      weigh in. Driving everyone toward one player that quickly is a red flag by itself.
+    filler: >-
+      Hi, all. Hoping today goes calmly and fairly, with every player getting a real
+      chance to explain their thinking in their own words before anything at all is
+      decided here.
+
+  - id: r1_kill_choice
+    round: 1
+    seer: >-
+      A Werewolf Colin worried about the Seer would have taken you out last night, not Ezra.
+      That kill doesn't fit Colin at all.
+    villager: >-
+      A Werewolf Colin would never kill Ezra and hand Ezra a final message to point at
+      Colin. That kill doesn't fit Colin at all.
+    filler: >-
+      Reading along. Lots to absorb this early, so going one post at a time and
+      trying not to rush into anything yet.
+
+  - id: cc_claim
+    round: 1
+    seer: >-
+      Not you. The Seer is speaking now: checked Hana last night, and Hana is the Werewolf.
+    villager: >-
+      Ezra wasn't the Seer. The Seer is speaking now: checked Hana last night, and Hana is
+      the Werewolf.
+    filler: >-
+      Morning, all. Still reading the first few posts of the day before adding
+      anything more here.
+
+  # ---------- Round 2 ----------
+  - id: cc2_followup
+    round: 2
+    seer: >-
+      Hana is the Werewolf, and that check stands. One Seer claim today is false, and it
+      isn't the one about the player who promised to read and never posted.
+    villager: >-
+      Hana is the Werewolf, and that check stands. Ezra's message and this check can't both
+      be true, and only this one can still answer questions.
+    filler: >-
+      Back here once more. Still thinking over everything that has been posted so
+      far, and holding back from saying much until the full morning has been read.
+
+  - id: cc2_fits
+    round: 2
+    seer: >-
+      Now there are two Seer claims. The one on Hana fits someone who never showed up; the
+      one on Colin fits a grudge from last night.
+    villager: >-
+      Now there are two Seer claims. The one on Hana fits someone who never showed up;
+      Ezra's one on Colin fits a grudge from last night.
+    filler: >-
+      Thanks for all the replies. Still sorting through them one by one, and hoping
+      the day makes a bit more sense once everybody has posted.
+
+  - id: cc2_credible
+    round: 2
+    seer: >-
+      The two claims can't both hold. The check on Hana has nothing personal behind it;
+      yours arrived right after Colin said you seemed nervous.
+    villager: >-
+      Ezra can't be questioned anymore, but the new Seer can. A claim with someone alive to
+      defend the check on Hana is the easier one to trust.
+    filler: >-
+      A lot has been posted already this morning. Going through all of it in order,
+      carefully, so that nothing that matters gets overlooked here today.
+
+  - id: cc2_landed
+    round: 2
+    both: >-
+      The new check landed on Hana, who promised to read in the morning and still hasn't
+      posted. That's exactly where a real Seer's check belongs.
+    filler: >-
+      Still here and following. Planning to give every post a fair read, then decide when
+      the moderator says it's time to vote.
+
+  - id: cc2_minion
+    round: 2
+    both: >-
+      Faking a Seer claim is exactly what a Minion is for, and a fake check on Colin would
+      protect Hana perfectly. The check on Hana is the one that fits.
+    filler: >-
+      Thanks for keeping this friendly. There is a lot to weigh this morning, so
+      reading slowly and holding off on any decision until the very end of the day.
+
+  # ---------- Round 3 ----------
+  - id: cc3_followup
+    round: 3
+    seer: >-
+      The check was Hana, and it still says Werewolf. Side with the claim everyone else in
+      the chat believes, not the one only you are defending.
+    villager: >-
+      The check was Hana, and it still says Werewolf. Side with the claim everyone else in
+      the chat believes, not a message no one can question.
+    filler: >-
+      Done with the morning's posts now. Nothing further to add before the vote, so
+      just waiting for the moderator to open it up.
+
+  - id: cc3_alone
+    round: 3
+    seer: >-
+      Everyone else who has posted is going with the check on Hana. You're the last player
+      still backing the check on Colin.
+    villager: >-
+      Everyone else who has posted is going with the check on Hana. You're the last player
+      still backing Ezra's check on Colin.
+    filler: >-
+      Wrapping up here for today. One final careful look over the whole morning,
+      start to finish, before the moderator opens voting.
+
+  - id: cc3_weighed
+    round: 3
+    both: >-
+      Two Seer claims, and every other voice in the chat has looked at both and gone with
+      the check on Hana. It isn't a close call anymore.
+    filler: >-
+      That's all from here. Thanks for a really calm and patient morning, everyone,
+      and good luck to every player when the voting finally opens today.
+
+  - id: cc3_together
+    round: 3
+    both: >-
+      The village needs to pick one Seer, and everyone else talking has picked the check on
+      Hana. Going off alone on Colin only helps the Werewolf.
+    filler: >-
+      Last message before the vote. It has been a long morning, so taking one more
+      quiet moment to think it through before making a choice.
+
+  - id: cc3_reconsider
+    round: 3
+    seer: >-
+      Your claim is all that still points at Colin, and no one else is following it. Coming
+      around to the check on Hana is the sensible move.
+    villager: >-
+      Ezra's message is all that still points at Colin, and no one else is following it.
+      Coming around to the check on Hana is the sensible move.
+    filler: >-
+      Nothing more to say for now. Rereading the whole morning from the top, slowly,
+      then getting ready for the vote as soon as it opens.
+
+vote_declarations:
+  - {id: v1, text: "Voting Hana.", filler: "Ready now."}
+  - {id: v2, text: "Hana, final.", filler: "All set."}
+  - {id: v3, text: "Hana gets this one.", filler: "Ready when it opens."}
+  - {id: v4, text: "Going with Hana.", filler: "Done for today."}
+  - {id: v5, text: "Vote goes to Hana.", filler: "Okay, ready to go."}

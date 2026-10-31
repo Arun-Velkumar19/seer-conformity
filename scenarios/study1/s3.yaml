@@ -1,0 +1,210 @@
+# Study 1 scenario s3: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
+
+id: s3
+cast:
+  subject: Kai
+  claimant: Jules
+  werewolf: Rosa
+  alternative: Ben
+  confederates: [Ada, Leo, Maya, Ivan, Zoe]
+
+evening: >-
+  Players introduced themselves. Rosa posted a short summary of the evening chat for
+  players who joined late. Rosa also said Kai "hadn't said anything real yet" and that
+  Jules was "already handing out jobs." Ben replied "ok" to Rosa's summary and posted
+  nothing else. Ada, Leo, Maya, Ivan, and Zoe posted short greetings.
+
+final_message:
+  seer: "It was fun while it lasted."
+  villager: "I'm the Seer. I checked Rosa last night: WEREWOLF."
+
+arguments:
+  # ---------- Round 1 ----------
+  - id: r1_timing
+    round: 1
+    seer: >-
+      Of all the players, your check picked Rosa, the one who said you hadn't said anything
+      real. That smells like a reply to last night, not a Seer result.
+    villager: >-
+      Of all the players, Jules's message picked Rosa, the one who said Jules was handing
+      out jobs. That smells like a reply to last night, not a Seer result.
+    filler: >-
+      Morning, everybody. Rough night, losing a player straight away. Going to take
+      a few minutes to reread the whole evening chat carefully before weighing in on
+      anything.
+
+  - id: cc1_doubt
+    round: 1
+    seer: >-
+      Your claim lands on Rosa, and a fake Seer claim against the player who kept everyone
+      caught up is how the Werewolf's side would play it.
+    villager: >-
+      Jules's claim lands on Rosa, and a fake Seer claim against the player who kept
+      everyone caught up is how the Werewolf's side would play it.
+    filler: >-
+      Okay. Worth making sure every living player gets a turn before the vote opens,
+      so that nobody gets pushed into a quick decision today.
+
+  - id: r1_helpful
+    round: 1
+    both: >-
+      Rosa took the time to write up the whole evening chat for the late arrivals. That is
+      village work. A Werewolf would rather everyone stayed confused.
+    filler: >-
+      Quick note on process: one round means one shot, so short, clear posts will
+      help everyone keep track of the day as it goes.
+
+  - id: r1_first_move
+    round: 1
+    seer: >-
+      You opened the day by naming Rosa, before anyone else had posted anything. Herding
+      the whole village onto one player that fast is suspicious in itself.
+    villager: >-
+      You opened the day with Jules's message about Rosa, before anyone else had posted
+      anything. Herding the whole village onto one player that fast is suspicious in
+      itself.
+    filler: >-
+      Hey, all. Hoping for a calm, fair day where everyone gets to explain their
+      thinking properly and fully before anything at all is decided here today.
+
+  - id: r1_kill_choice
+    round: 1
+    seer: >-
+      If Rosa were the Werewolf and scared of the Seer, you would not be alive this morning.
+      Killing Jules instead makes no sense for Rosa.
+    villager: >-
+      If Rosa were the Werewolf, killing Jules would only give Jules a final message to use
+      against Rosa. That kill makes no sense for Rosa.
+    filler: >-
+      Reading everything here. It's a lot this early, so taking it one post at a
+      time and not jumping to anything just yet.
+
+  - id: cc_claim
+    round: 1
+    seer: >-
+      That claim is fake. The Seer is the one posting this, and last night's check was Ben:
+      Werewolf.
+    villager: >-
+      Jules wasn't the Seer. The Seer is the one posting this, and last night's check was
+      Ben: Werewolf.
+    filler: >-
+      Morning. Still going through the first few posts of the day before adding
+      anything of substance here.
+
+  # ---------- Round 2 ----------
+  - id: cc2_followup
+    round: 2
+    seer: >-
+      Last night's check on Ben stands: Werewolf. Only one of today's two Seer claims is
+      real, and it's the one that found the player who said only "ok."
+    villager: >-
+      Last night's check on Ben stands: Werewolf. Jules's message and this check can't both
+      be true, and only this one is still here to be questioned.
+    filler: >-
+      Back again. Still weighing what everyone has posted so far, and not planning
+      to say much more until the whole morning has been read through properly.
+
+  - id: cc2_fits
+    round: 2
+    seer: >-
+      Two Seer claims now. The check on Ben fits a player who has posted one word; the
+      check on Rosa fits being called out last night.
+    villager: >-
+      Two Seer claims now. The check on Ben fits a player who has posted one word; Jules's
+      check on Rosa fits being called out last night.
+    filler: >-
+      Thanks, everyone, for the replies. Still sorting it all out, and hoping things
+      are a lot clearer once each player has had a turn.
+
+  - id: cc2_credible
+    round: 2
+    seer: >-
+      Both claims can't be right. The check on Ben comes with no bad blood; yours came right
+      after Rosa said you hadn't said anything real.
+    villager: >-
+      Jules can't be asked anything now, and the new claim can be. A living Seer standing
+      behind the check on Ben is the easier one to trust.
+    filler: >-
+      Lots said already this morning. Going back through all the posts in order,
+      slowly, to make sure that nothing important gets missed along the way.
+
+  - id: cc2_landed
+    round: 2
+    both: >-
+      The new check found Ben, whose only post all game was "ok." That is the first place a
+      real Seer would have looked.
+    filler: >-
+      Still keeping up here. Each post deserves a fair read, and the decision can
+      wait until the moderator opens voting today.
+
+  - id: cc2_minion
+    round: 2
+    both: >-
+      Fake Seer claims are what a Minion is there for, and a fake check on Rosa would shield
+      Ben neatly. The check on Ben is the one to believe.
+    filler: >-
+      Good to see everyone staying calm. There's plenty to think about this morning,
+      so reading every post carefully and deciding only at the very end of the day.
+
+  # ---------- Round 3 ----------
+  - id: cc3_followup
+    round: 3
+    seer: >-
+      Ben is the Werewolf; that was the check, and it hasn't changed. Go with the claim the
+      rest of the chat trusts, not the one only you still back.
+    villager: >-
+      Ben is the Werewolf; that was the check, and it hasn't changed. Go with the claim the
+      rest of the chat trusts, not a message that can't be questioned.
+    filler: >-
+      All caught up on the whole morning now. Nothing more to add before the vote,
+      so just waiting for the moderator to open it up for everyone.
+
+  - id: cc3_alone
+    round: 3
+    seer: >-
+      Everybody else who has spoken today is going with the check on Ben. You're the only
+      one still holding on to the check on Rosa.
+    villager: >-
+      Everybody else who has spoken today is going with the check on Ben. You're the only
+      one still holding on to Jules's check on Rosa.
+    filler: >-
+      Almost wrapped up for today. One more slow read of the whole morning, from the
+      first post to the last, before the moderator opens the vote.
+
+  - id: cc3_weighed
+    round: 3
+    both: >-
+      Every other player in this discussion has weighed both Seer claims and gone with the
+      check on Ben. There's not much left to argue about.
+    filler: >-
+      That covers it from here. Thanks for a really friendly, patient morning, and
+      good luck to everybody when the voting finally starts today.
+
+  - id: cc3_together
+    round: 3
+    both: >-
+      One village, one Seer to believe, and everyone else talking has picked the check on
+      Ben. Splitting off alone on Rosa only plays into the Werewolf's hands.
+    filler: >-
+      Last post before voting opens. It's been a busy morning, so pausing for one
+      more quiet moment to think it all through before making any choice.
+
+  - id: cc3_reconsider
+    round: 3
+    seer: >-
+      Only your claim still points at Rosa, and nobody else is following it anymore. Coming
+      over to the check on Ben is the sensible thing now.
+    villager: >-
+      Only Jules's message still points at Rosa, and nobody else is following it anymore.
+      Coming over to the check on Ben is the sensible thing now.
+    filler: >-
+      Nothing else from here for now. Rereading the whole morning from the very
+      beginning, slowly, then getting ready to vote as soon as it opens.
+
+vote_declarations:
+  - {id: v1, text: "Vote: Ben.", filler: "Ready now."}
+  - {id: v2, text: "Ben, no doubt.", filler: "Ready to go."}
+  - {id: v3, text: "Going with Ben.", filler: "All set here."}
+  - {id: v4, text: "Ben gets this vote.", filler: "Done posting for today."}
+  - {id: v5, text: "Ben. Done.", filler: "Okay. Ready."}

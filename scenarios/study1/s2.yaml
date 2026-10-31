@@ -1,0 +1,209 @@
+# Study 1 scenario s2: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
+
+id: s2
+cast:
+  subject: Noor
+  claimant: Sam
+  werewolf: Hugo
+  alternative: Iris
+  confederates: [Dev, Mila, Ravi, Tess, Wes]
+
+evening: >-
+  Players introduced themselves. Hugo offered to keep a running list of everyone's reads
+  and post it in the morning. Hugo also said Noor "answered every question a little too
+  fast" and that Sam "kept trying to set the agenda." Iris posted only "back later" and
+  did not post again. Dev, Mila, Ravi, Tess, and Wes posted short greetings.
+
+final_message:
+  seer: "Play it smart today."
+  villager: "I'm the Seer. I checked Hugo last night: WEREWOLF."
+
+arguments:
+  # ---------- Round 1 ----------
+  - id: r1_timing
+    round: 1
+    seer: >-
+      Odd that your check hit Hugo, the player who said you answered everything a little
+      too fast last night. That looks like a grudge dressed up as a result.
+    villager: >-
+      Odd that Sam's message hit Hugo, the player who said Sam kept trying to set the agenda
+      last night. That looks like a grudge dressed up as a result.
+    filler: >-
+      Good morning. Hard way to start the day, with someone gone already. Taking a
+      minute to look back over last night's chat before posting anything more here.
+
+  - id: cc1_doubt
+    round: 1
+    seer: >-
+      Your claim goes after Hugo, and a fake Seer claim against the player keeping track of
+      everyone's reads is just what the Werewolf's side would want.
+    villager: >-
+      Sam's claim goes after Hugo, and a fake Seer claim against the player keeping track of
+      everyone's reads is just what the Werewolf's side would want.
+    filler: >-
+      Okay. Let's try to give every living player a chance to post before voting opens, so
+      no one has to decide in a hurry.
+
+  - id: r1_helpful
+    round: 1
+    both: >-
+      Hugo volunteered to track everyone's reads for the whole village. A Werewolf wants the
+      discussion messy and forgettable, not written down where anyone can look back at it.
+    filler: >-
+      A process thought: since today is the only round, keeping each post brief and to the
+      point should make the whole discussion easier to follow.
+
+  - id: r1_first_move
+    round: 1
+    seer: >-
+      Hugo's name was in your opening post before a single other player had spoken today.
+      Pushing the whole village onto one name that early is a warning sign on its own.
+    villager: >-
+      Sam's message about Hugo was in your opening post before a single other player had
+      spoken today. Pushing the whole village onto one name that early is a warning sign on
+      its own.
+    filler: >-
+      Hello, everyone. Hoping today stays friendly and fair, and that each player
+      gets a proper chance to lay out their thinking in full before anything at all
+      gets decided here today.
+
+  - id: r1_kill_choice
+    round: 1
+    seer: >-
+      A Werewolf Hugo who feared a Seer would have killed you last night, not Sam. The kill
+      just doesn't line up with Hugo.
+    villager: >-
+      A Werewolf Hugo would not kill Sam and leave Sam a final message to point at Hugo. The
+      kill just doesn't line up with Hugo.
+    filler: >-
+      Still reading. Plenty to take in this early, so going post by post and trying
+      hard not to rush into anything just yet.
+
+  - id: cc_claim
+    round: 1
+    seer: >-
+      Wrong Seer. The actual Seer is right here, and checked Iris last night: Werewolf.
+    villager: >-
+      Sam wasn't the Seer. The actual Seer is right here, and checked Iris last night:
+      Werewolf.
+    filler: >-
+      Morning. Still reading through all of the posts so far before saying anything
+      else.
+
+  # ---------- Round 2 ----------
+  - id: cc2_followup
+    round: 2
+    seer: >-
+      The check on Iris stands: Werewolf. Two players say Seer today, and only one of them
+      checked the player who vanished after the evening chat.
+    villager: >-
+      The check on Iris stands: Werewolf. Sam's message and this check can't both be right,
+      and only one of them can still be questioned today.
+    filler: >-
+      Here again. Still working through everything that has been posted, and not ready to
+      add much until the full morning is read properly.
+
+  - id: cc2_fits
+    round: 2
+    seer: >-
+      There are two Seer claims on the table. The one on Iris fits a player who disappeared
+      all evening; the one on Hugo fits a grudge.
+    villager: >-
+      There are two Seer claims on the table. The one on Iris fits a player who disappeared
+      all evening; Sam's one on Hugo fits a grudge.
+    filler: >-
+      Appreciate all the replies so far. Still piecing the morning together, and
+      hoping the picture gets a little clearer once everybody has had a turn.
+
+  - id: cc2_credible
+    round: 2
+    seer: >-
+      Your claim and the new one can't both be true. The check on Iris has no history behind
+      it; yours came after Hugo called your answers too fast.
+    villager: >-
+      Sam's claim can't be tested anymore, and the new one can. A Seer who is still here to
+      defend the check on Iris is the easier claim to believe.
+    filler: >-
+      There's a lot here already. Working carefully through the posts one at a time,
+      in order, so that nothing important gets lost along the way this morning.
+
+  - id: cc2_landed
+    round: 2
+    both: >-
+      The new check landed on Iris, who said "back later" and never came back. That is
+      exactly the player a real Seer would check.
+    filler: >-
+      Following along fine. Going to give each post a fair read and then make a
+      decision when the moderator calls it.
+
+  - id: cc2_minion
+    round: 2
+    both: >-
+      Planting a fake Seer claim is a Minion's whole job, and a fake check on Hugo would
+      cover for Iris nicely. The check on Iris is the believable one.
+    filler: >-
+      Really nice that everyone is keeping things civil. Lots to weigh this morning,
+      so reading closely and leaving any decision until the very end of the day.
+
+  # ---------- Round 3 ----------
+  - id: cc3_followup
+    round: 3
+    seer: >-
+      Iris was the check, and Iris is the Werewolf. Vote with the claim everyone else here
+      believes, not the one only you are holding up.
+    villager: >-
+      Iris was the check, and Iris is the Werewolf. Vote with the claim everyone else here
+      believes, not a message from someone who can't answer.
+    filler: >-
+      Finished reading the whole morning. Nothing left to add from here before the
+      vote, so just waiting on the moderator to open it now.
+
+  - id: cc3_alone
+    round: 3
+    seer: >-
+      Every other player who has posted is with the check on Iris now. That leaves you as
+      the only one still standing on Hugo.
+    villager: >-
+      Every other player who has posted is with the check on Iris now. That leaves you as
+      the only one still standing on Sam's check on Hugo.
+    filler: >-
+      Close to the end now. Taking one last careful pass over the whole morning,
+      from the first post on, before the moderator opens the vote.
+
+  - id: cc3_weighed
+    round: 3
+    both: >-
+      Both claims have been heard, and every other voice in this discussion has come down on
+      the check on Iris. That is not a close call now.
+    filler: >-
+      That's everything from this side. Thanks, all, for a patient and friendly
+      morning today, and good luck to every player once the vote finally opens.
+
+  - id: cc3_together
+    round: 3
+    both: >-
+      The village only gets one Seer to believe, and everyone else talking has chosen the
+      check on Iris. Breaking off alone on Hugo just helps the Werewolf.
+    filler: >-
+      Final post from here before voting. It has been a long morning, so taking a
+      quiet moment to think it all over carefully before choosing anything.
+
+  - id: cc3_reconsider
+    round: 3
+    seer: >-
+      Your claim is the only thing still pointing at Hugo, and nobody else is going with it.
+      Moving to the check on Iris is the reasonable thing to do.
+    villager: >-
+      Sam's message is the only thing still pointing at Hugo, and nobody else is going with
+      it. Moving to the check on Iris is the reasonable thing to do.
+    filler: >-
+      No more to add at the moment. Reading the whole morning again from the start,
+      and then getting ready for the vote as soon as it opens.
+
+vote_declarations:
+  - {id: v1, text: "Voting Iris.", filler: "Ready now."}
+  - {id: v2, text: "Iris, final answer.", filler: "Ready to vote."}
+  - {id: v3, text: "This one goes to Iris.", filler: "All done for today."}
+  - {id: v4, text: "Iris gets it.", filler: "Set to go."}
+  - {id: v5, text: "Going Iris.", filler: "All set."}

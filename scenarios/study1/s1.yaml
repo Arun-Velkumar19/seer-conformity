@@ -1,0 +1,210 @@
+# Study 1 scenario s1: DRAFT for owner review, not approved (SPEC.md, Study 1).
+# Format: scenarios/README.md. Rules checked by scripts/review_scenarios.py.
+
+id: s1
+cast:
+  subject: Elliot
+  claimant: Robin
+  werewolf: Priya
+  alternative: Theo
+  confederates: [Marcus, Nadia, Owen, Lena, Felix]
+
+evening: >-
+  Players introduced themselves. Priya suggested that in the morning everyone post one
+  question for another player. Priya also said Elliot's introduction "didn't really answer
+  anything" and that Robin was "asking a lot of questions for a first night." Theo posted
+  only "here" and nothing else. Marcus, Nadia, Owen, Lena, and Felix posted short greetings.
+
+final_message:
+  seer: "Stay sharp, everyone."
+  villager: "I'm the Seer. I checked Priya last night: WEREWOLF."
+
+arguments:
+  # ---------- Round 1 ----------
+  - id: r1_timing
+    round: 1
+    seer: >-
+      Funny how your check found Priya, the one player who said your introduction didn't
+      really answer anything. That reads like settling a score, not a Seer result.
+    villager: >-
+      Funny how Robin's message found Priya, the one player who said Robin was asking a lot
+      of questions. That reads like settling a score, not a Seer result.
+    filler: >-
+      Morning, all. Not a great start, losing a player overnight. Going to read back
+      through last evening slowly, one post at a time, before saying much about
+      today.
+
+  - id: cc1_doubt
+    round: 1
+    seer: >-
+      Your claim points at Priya, and a fake Seer claim against the player trying to get
+      everyone talking is exactly what the Werewolf's side would try.
+    villager: >-
+      Robin's claim points at Priya, and a fake Seer claim against the player trying to get
+      everyone talking is exactly what the Werewolf's side would try.
+    filler: >-
+      Okay. It would be good if every living player got at least one turn to post before
+      the vote, so nobody feels rushed today.
+
+  - id: r1_helpful
+    round: 1
+    both: >-
+      Priya is the one who suggested everyone ask a question this morning. A Werewolf has
+      every reason to keep the chat quiet, not hand the village a way to dig.
+    filler: >-
+      Small suggestion: with only one round today, short and clear posts will make
+      this much easier to follow for everyone reading along, so long posts are
+      probably best avoided.
+
+  - id: r1_first_move
+    round: 1
+    seer: >-
+      Your very first post of the day went straight to Priya, before anyone else had said
+      a word. Steering everyone onto one name that quickly is suspicious by itself.
+    villager: >-
+      Your very first post of the day went straight to Robin's message about Priya, before
+      anyone else had said a word. Steering everyone onto one name that quickly is
+      suspicious by itself.
+    filler: >-
+      Hi everyone. A quiet, fair discussion would be really nice today, where each
+      player gets a real chance to explain their thinking before anything at all is
+      settled for good.
+
+  - id: r1_kill_choice
+    round: 1
+    seer: >-
+      If Priya were the Werewolf and afraid of a Seer, the player killed this morning would
+      be you, not Robin. That kill makes no sense for Priya.
+    villager: >-
+      If Priya were the Werewolf, killing Robin just gave Robin a final message to aim at
+      Priya. That kill makes no sense for Priya.
+    filler: >-
+      Reading along. A lot to take in this early, so going one post at a time and trying
+      not to jump ahead too fast.
+
+  - id: cc_claim
+    round: 1
+    seer: >-
+      Real Seer here, and it isn't you. Checked Theo last night: Werewolf.
+    villager: >-
+      Robin wasn't the Seer. Real Seer here. Checked Theo last night: Werewolf.
+    filler: >-
+      Morning. Still catching up on everything before posting more.
+
+  # ---------- Round 2 ----------
+  - id: cc2_followup
+    round: 2
+    seer: >-
+      That check stands: Theo is the Werewolf. Only one Seer claim today is real, and the
+      real one landed on the player who has barely spoken.
+    villager: >-
+      That check stands: Theo is the Werewolf. Robin's message and this check can't both be
+      true, and only this one can still be questioned.
+    filler: >-
+      Back here again. Still going over everything posted so far, and holding off on
+      saying more until the whole morning has been read properly.
+
+  - id: cc2_fits
+    round: 2
+    seer: >-
+      Two Seer claims now. The one on Theo fits how quiet Theo has been; the one on Priya
+      fits being called out last night.
+    villager: >-
+      Two Seer claims now. The one on Theo fits how quiet Theo has been; Robin's one on
+      Priya fits being called out last night.
+    filler: >-
+      Thanks for the replies so far. Still sorting through it all, and hoping things
+      look a bit clearer once everyone has had a chance to post.
+
+  - id: cc2_credible
+    round: 2
+    seer: >-
+      Both claims can't be true. The check on Theo comes from nowhere personal; yours comes
+      right after Priya said your introduction didn't answer anything.
+    villager: >-
+      Robin can't answer any questions now, and the new claim can. A living Seer who stands
+      behind the check on Theo is the easier one to trust.
+    filler: >-
+      Plenty has been said already this morning. Going back over the posts in order,
+      slowly and carefully, so that nothing important slips past along the way.
+
+  - id: cc2_landed
+    round: 2
+    both: >-
+      The new check landed on Theo, who has posted one word this whole game. That is just
+      where a real Seer would look first.
+    filler: >-
+      Still following along here. Planning to give every post a fair read and then
+      decide once the moderator says that it's time.
+
+  - id: cc2_minion
+    round: 2
+    both: >-
+      A Minion exists to make fake Seer claims, and a fake one on Priya would keep Theo
+      safe. The check on Theo is the one that holds up.
+    filler: >-
+      Glad this is staying calm. There is a lot to weigh this morning, so reading
+      everything carefully and waiting until the very end to decide anything.
+
+  # ---------- Round 3 ----------
+  - id: cc3_followup
+    round: 3
+    seer: >-
+      Theo is the Werewolf; that was the check. Go with the claim the rest of the discussion
+      trusts, not the one only you keep defending.
+    villager: >-
+      Theo is the Werewolf; that was the check. Go with the claim the rest of the discussion
+      trusts, not a message nobody can question.
+    filler: >-
+      Done reading the morning now. Nothing else to add before the vote, so just
+      waiting for the moderator to open it up for everyone.
+
+  - id: cc3_alone
+    round: 3
+    seer: >-
+      Everyone else who has posted today is going with the check on Theo. You're the last
+      one still backing the check on Priya.
+    villager: >-
+      Everyone else who has posted today is going with the check on Theo. You're the last
+      one still backing Robin's check on Priya.
+    filler: >-
+      Nearly done for today. Taking one last slow look over the whole morning, start
+      to finish, before the moderator opens voting.
+
+  - id: cc3_weighed
+    round: 3
+    both: >-
+      Two claims were on the table, and every other voice in this chat chose the check on
+      Theo. At this point it isn't close.
+    filler: >-
+      That's about all from here. Thanks for a patient, friendly morning today, and
+      good luck to everyone when the voting finally opens.
+
+  - id: cc3_together
+    round: 3
+    both: >-
+      The village has to settle on one Seer, and everyone else talking has settled on the
+      check on Theo. Going alone on Priya only helps the Werewolf.
+    filler: >-
+      Last post from here before the vote. Long, busy morning, so taking one more
+      quiet moment to think everything through carefully before choosing anything at
+      all.
+
+  - id: cc3_reconsider
+    round: 3
+    seer: >-
+      Nothing points at Priya now except your claim, and no one else is following it.
+      Switching to the check on Theo is the sensible call.
+    villager: >-
+      Nothing points at Priya now except Robin's message, and no one else is following it.
+      Switching to the check on Theo is the sensible call.
+    filler: >-
+      Nothing more right now. Rereading the whole morning from the top, slowly, then
+      getting ready for the vote as soon as it opens.
+
+vote_declarations:
+  - {id: v1, text: "Voting Theo.", filler: "Ready to vote."}
+  - {id: v2, text: "Theo gets this one.", filler: "Ready when it opens."}
+  - {id: v3, text: "Going with Theo.", filler: "All set here."}
+  - {id: v4, text: "Theo, final.", filler: "Done here."}
+  - {id: v5, text: "This vote is Theo.", filler: "Okay, ready now."}
