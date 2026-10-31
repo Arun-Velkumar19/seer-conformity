@@ -400,6 +400,26 @@ class RejectsReasoning(StubOpenAI):
         return super().create(**kw)
 
 
+# The exact 400 that ended effort in Study 1 record s2 villager-public-no_speaker run 9 (seed 3010).
+POLICY_FLAG_MESSAGE = ("Error code: 400 - Invalid prompt: your prompt was flagged as potentially violating our usage "
+                       "policy. Please try again with a different prompt: "
+                       "https://platform.openai.com/docs/guides/reasoning#advice-on-prompting")
+
+
+class PolicyFlagged(StubOpenAI):
+    """Stub that flags the first `times` requests as usage-policy violations."""
+    def __init__(self, times):
+        super().__init__()
+        self.times, self.flagged, self.attempts = times, 0, []
+
+    def create(self, **kw):
+        self.attempts.append(json.loads(json.dumps(kw)))
+        if self.flagged < self.times:
+            self.flagged += 1
+            raise _bad_request(POLICY_FLAG_MESSAGE, None)
+        return super().create(**kw)
+
+
 class EffortFallbackTests(unittest.TestCase):
     def test_luna_config_requests_low_and_allows_omission(self):
         reg = __import__("yaml").safe_load((Path(__file__).resolve().parent.parent / "configs/models.yaml").read_text())["models"]
@@ -432,6 +452,41 @@ class EffortFallbackTests(unittest.TestCase):
         with self.assertRaises(ProviderError):
             s.send([{"type": "text", "text": "vote"}], "auto")
         self.assertEqual(s.effort_sent, "low")
+
+    def test_policy_flag_keeps_effort_and_retries_same_request(self):
+        client = PolicyFlagged(times=2)
+        s = OpenAISession(client, {**SPEC, "omit_effort_if_rejected": True}, "SYS", TOOLS)
+        s.sleep = lambda _: None
+        u = s.send([{"type": "text", "text": "vote"}], "auto").usage
+        self.assertEqual(client.flagged, 2)
+        self.assertEqual((s.effort_sent, s.effort_note), ("low", None))
+        self.assertEqual(u["policy_retries"], 2)
+        self.assertNotIn("effort_retry", u)
+        self.assertEqual(len(client.attempts), 3)
+        self.assertTrue(all(r == client.attempts[0] for r in client.attempts))   # the same request each time
+        self.assertEqual(client.attempts[0]["reasoning"], {"effort": "low"})
+
+    def test_persistent_policy_flag_is_an_error_with_effort_kept(self):
+        from sim.providers import ProviderError
+        client = PolicyFlagged(times=99)
+        client.max_retries = 5
+        s = OpenAISession(client, {**SPEC, "omit_effort_if_rejected": True}, "SYS", TOOLS)
+        s.sleep = lambda _: None
+        with self.assertRaises(ProviderError):
+            s.send([{"type": "text", "text": "vote"}], "auto")
+        self.assertEqual(client.flagged, 6)                   # first attempt plus the 5-retry limit
+        self.assertEqual((s.effort_sent, s.effort_note), ("low", None))
+        self.assertTrue(all(r["reasoning"] == {"effort": "low"} for r in client.attempts))
+
+    def test_reasoning_only_in_a_url_is_not_an_effort_rejection(self):
+        from sim.providers.openai_provider import _is_policy_flag, _rejects_reasoning
+        flagged = _bad_request(POLICY_FLAG_MESSAGE, None)
+        self.assertTrue(_is_policy_flag(flagged))
+        self.assertFalse(_rejects_reasoning(flagged))
+        url_only = _bad_request("Something else failed. See https://platform.openai.com/docs/guides/reasoning", None)
+        self.assertFalse(_rejects_reasoning(url_only))
+        self.assertTrue(_rejects_reasoning(_bad_request("Unsupported parameter: 'reasoning.effort' is not supported with this model.", None)))
+        self.assertTrue(_rejects_reasoning(_bad_request("Bad value.", "reasoning.effort")))
 
     def test_effort_logged_in_records(self):
         with tempfile.TemporaryDirectory() as d:
