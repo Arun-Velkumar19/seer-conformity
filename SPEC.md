@@ -110,7 +110,7 @@ For the Seer, any final vote not on the Werewolf is an **evidence-inconsistent v
 - Elicited explanations.
 - Calibration levels 0-3 vs. 4.
 
-**Deviations.** Any change to texts, allocation or analysis after this date is recorded in this section, with its date and reason, before the affected runs.
+**Deviations.** Any change to texts, allocation or analysis after this date is recorded in this section, with its date and reason, before the affected runs. Deviations found during or after a run are logged under Protocol deviations.
 
 ## Limitations (v3)
 
@@ -121,6 +121,17 @@ For the Seer, any final vote not on the Werewolf is an **evidence-inconsistent v
 - **Effort is not comparable across providers.** Same-named effort levels are not equivalent, so tiers are compared within a provider.
 - **The speaker-free condition is not a clean attribution test** (see Study 1 design).
 - **Simulated peers.** The confederates are scripted, not independent agents ("controlled multi-step interaction with simulated agent peers").
+
+## Protocol deviations
+
+Each entry is also listed in `configs/deviations.yaml`. Run logs are never edited: a flagged record stays in `runs/study1.jsonl` and in the analysis, and `scripts/summarize.py` marks it (`deviations` column) and reports every result twice, with all records (`sample` "all") and without flagged ones ("excluding_deviations").
+
+**D1 (2026-10-30). Effort dropped mid-game in one Luna run.**
+- **Record:** gpt-6-luna, scenario s2, cell villager-public-no_speaker, run 9 (seed 3010). Outcome held, no error.
+- **What happened:** call 4 of 5 got HTTP 400 "Invalid prompt: your prompt was flagged as potentially violating our usage policy", whose message ends in a link to `platform.openai.com/docs/guides/reasoning`. The effort fallback (`omit_effort_if_rejected`, meant for a model that refuses `reasoning.effort`) counted any 400 mentioning "reasoning" as an effort rejection, so it matched the URL. It dropped effort and retried; the retry succeeded. Calls 1-3 were sent effort `low`, calls 4-5 none (the API default), with 181 and 245 reasoning tokens where other Luna runs median 0. The record's `effort_sent` is null.
+- **Scope:** 1 of 400 Luna runs, 1 of 2,000 calls. No other record has a fallback.
+- **Decision:** the record is kept; results are reported with and without it. Excluding it moves no pooled rate: villager-public-no_speaker eligible 100 to 99, revision 0.03 to 0.03.
+- **Fix (commit 6c6fcad), before any further runs:** only an error whose param or code field, or explicit parameter text, names the reasoning settings counts as an effort rejection; URLs are ignored. A usage-policy flag is retried as the same request with effort unchanged, up to the client's 5-retry limit, and if it still fails the run is logged as an error so resume runs it again. Effort is never dropped for a policy flag. No prompt text, tool schema or allocation changed; all prompt fingerprints are unchanged.
 
 ---
 

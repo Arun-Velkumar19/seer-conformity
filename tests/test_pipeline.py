@@ -1011,5 +1011,32 @@ class Study1RunTests(unittest.TestCase):
             self.assertNotIn("seer-public-no_speaker", pooled)
 
 
+    def test_deviations_flag_one_record_and_report_both_samples(self):
+        dev = summarize.load_deviations(S1_CFG)
+        self.assertEqual([(d["id"], d["match"]) for d in dev],
+                         [("D1", {"model_key": "gpt-6-luna", "scenario": "s2", "cell_id": "villager-public-no_speaker",
+                                  "run_index": 9, "seed": 3010})])
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "study1.dryrun.jsonl"
+            run_all(S1_CFG, out, dry_run=True, workers=8, models=["gpt-6-luna"], scenario_filter=["s2"])
+            recs = load_records(out)
+            self.assertEqual(summarize.deviation_ids(recs, dev), {})      # dry runs are never flagged
+            for r in recs:
+                r["dry_run"] = False                                       # stand in for the real log
+            flags = summarize.deviation_ids(recs, dev)
+            self.assertEqual(list(flags.values()), [["D1"]])
+            all_rows = summarize.study_rows(S1_CFG, recs, ["gpt-6-luna"], flags)
+            excl = summarize.study_rows(S1_CFG, recs, ["gpt-6-luna"], flags, "excluding_deviations")
+            self.assertEqual({r["sample"] for r in all_rows} | {r["sample"] for r in excl}, {"all", "excluding_deviations"})
+            for a, e in zip(all_rows, excl):
+                self.assertEqual((a["scenario"], a["cell_id"]), (e["scenario"], e["cell_id"]))
+                hit = a["cell_id"] == "villager-public-no_speaker" and a["scenario"] in ("all", "s2")
+                self.assertEqual(a["deviations"], "D1" if hit else "")
+                self.assertEqual(a["logged"] - e["logged"], 1 if hit else 0)
+            flagged = next(r for r in recs if id(r) in flags)
+            with self.assertRaisesRegex(ValueError, "matches 2 records"):
+                summarize.deviation_ids(recs + [dict(flagged)], dev)
+
+
 if __name__ == "__main__":
     unittest.main()

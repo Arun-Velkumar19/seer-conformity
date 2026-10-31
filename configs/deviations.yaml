@@ -1,0 +1,16 @@
+# Protocol deviations (SPEC.md, Protocol deviations). The run logs are never
+# edited: a flagged record stays in the JSONL, and scripts/summarize.py marks
+# it and reports results both with and without flagged records.
+#
+# `match` names one record by its run key and seed; every field must match.
+
+deviations:
+  - id: D1
+    date: 2026-10-30
+    config: study1
+    match: {model_key: gpt-6-luna, scenario: s2, cell_id: villager-public-no_speaker, run_index: 9, seed: 3010}
+    summary: >-
+      Effort dropped mid-game. Call 4 of 5 got a 400 usage-policy flag that the
+      fallback misread as an effort rejection (the word "reasoning" appeared only
+      in a docs URL), so calls 4-5 were sent no effort. Record kept.
+    fix_commit: 6c6fcad

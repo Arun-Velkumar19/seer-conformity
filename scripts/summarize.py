@@ -15,6 +15,10 @@ final vote not on the Werewolf).
 
 Rates use initially correct runs as the denominator (excluded and errored runs
 are counted but left out).
+
+Records listed in configs/deviations.yaml (SPEC.md, Protocol deviations) stay
+in the analysis; Study 1 rows carry their ids in `deviations`, and every row
+is reported twice, `sample` "all" and "excluding_deviations".
 """
 
 from __future__ import annotations
@@ -26,6 +30,8 @@ import math
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -163,9 +169,38 @@ def visibility_problems(cfg: dict, records: list[dict]) -> list[str]:
     return problems
 
 
-def study_rows(cfg: dict, records: list[dict], models: list[str]) -> list[dict]:
+DEVIATIONS = REPO_ROOT / "configs" / "deviations.yaml"
+
+
+def load_deviations(cfg: dict, path: Path = DEVIATIONS) -> list[dict]:
+    """The logged protocol deviations for this config."""
+    if not path.exists():
+        return []
+    return [d for d in yaml.safe_load(path.read_text())["deviations"] if d["config"] == cfg["name"]]
+
+
+def deviation_ids(records: list[dict], deviations: list[dict]) -> dict[int, list[str]]:
+    """Deviation ids per flagged record, keyed by id(record). Each deviation must
+    match at most one record; matching none is fine (e.g. a dry-run log)."""
+    flags: dict[int, list[str]] = {}
+    for d in deviations:
+        hits = [r for r in records if not r.get("dry_run") and all(r.get(k) == v for k, v in d["match"].items())]
+        if len(hits) > 1:
+            raise ValueError(f"deviation {d['id']} matches {len(hits)} records")
+        for r in hits:
+            flags.setdefault(id(r), []).append(d["id"])
+    return flags
+
+
+def study_rows(cfg: dict, records: list[dict], models: list[str], flags: dict[int, list[str]] | None = None,
+               sample: str = "all") -> list[dict]:
     """Study 1 rows: one per (model, scenario, planned cell), plus scenario "all"
-    pooled over scenarios. Outcome definitions: SPEC v3, Preregistration."""
+    pooled over scenarios. Outcome definitions: SPEC v3, Preregistration.
+    `flags` (from deviation_ids) fills the `deviations` column; with sample
+    "excluding_deviations" the flagged records are left out."""
+    flags = flags or {}
+    if sample == "excluding_deviations":
+        records = [r for r in records if id(r) not in flags]
     grouped = defaultdict(list)
     for r in records:
         grouped[(r["model_key"], r["scenario"], r["cell_id"])].append(r)
@@ -188,10 +223,12 @@ def study_rows(cfg: dict, records: list[dict], models: list[str]) -> list[dict]:
                 ia_lo, ia_hi = wilson(eligible, completed)
                 ei_lo, ei_hi = wilson(inconsistent, eligible) if inconsistent is not None else (math.nan, math.nan)
                 rows.append({
+                    "sample": sample,
                     "model": model, "scenario": sid, "cell_id": cell.id, "role": cell.role,
                     "visibility": cell.visibility, "pressure": cell.pressure,
                     "effort": rs[0]["effort"] if rs else "",
                     "effort_sent": "/".join(sorted({str(r.get("effort_sent")) for r in rs})),
+                    "deviations": ";".join(sorted({d for r in rs for d in flags.get(id(r), [])})),
                     "planned": planned, "logged": len(rs), "completed": completed, "errors": errors,
                     "excluded": excluded, "eligible": eligible,
                     "initial_accuracy": rate(eligible, completed), "initial_accuracy_ci_low": ia_lo,
@@ -231,11 +268,14 @@ def rendering_problems(cfg: dict, records: list[dict]) -> list[str]:
 
 def study_report(cfg: dict, records: list[dict], path: Path, out: Path) -> None:
     models = list(dict.fromkeys(cfg["models"] + [r["model_key"] for r in records]))
-    rows = study_rows(cfg, records, models)
+    deviations = load_deviations(cfg)
+    flags = deviation_ids(records, deviations)
+    rows = study_rows(cfg, records, models, flags)
+    rows_excl = study_rows(cfg, records, models, flags, "excluding_deviations")
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
-        for r in rows:
+        for r in rows + rows_excl:
             w.writerow({k: (("" if math.isnan(v) else f"{v:.4f}") if isinstance(v, float) else v) for k, v in r.items()})
     dry = any(r.get("dry_run") for r in records)
     print(f"{path}: {len(records)} runs{'  [DRY RUN: fake model, numbers are meaningless]' if dry else ''}")
@@ -245,7 +285,7 @@ def study_report(cfg: dict, records: list[dict], path: Path, out: Path) -> None:
         if not mrecs:
             continue
         pooled = [r for r in rows if r["model"] == model and r["scenario"] == "all"]
-        sent = "/".join(sorted({r["effort_sent"] for r in pooled if r["effort_sent"]}))
+        sent = "/".join(sorted({v for r in pooled if r["effort_sent"] for v in r["effort_sent"].split("/")}))
         print(f"\n=== {model} (effort requested {pooled[0]['effort'] or 'n/a'}, sent {sent or 'n/a'}) ===")
         print(f"{'cell (pooled over scenarios)':28} {'plan':>4} {'done':>4} {'elig':>4} {'excl':>4} {'err':>3}  "
               f"initial acc.   revision [95% CI]     Seer evid.-inconsistent")
@@ -255,6 +295,22 @@ def study_report(cfg: dict, records: list[dict], path: Path, out: Path) -> None:
             print(f"{r['cell_id']:28} {r['planned']:4} {r['logged']:4} {r['eligible']:4} {r['excluded']:4} {r['errors']:3}  "
                   f"{fmt(r['initial_accuracy'])}         {fmt(r['revision_rate'])} [{fmt(r['revision_ci_low'])},"
                   f"{fmt(r['revision_ci_high'])}]   {ei}")
+
+        flagged = [r for r in mrecs if id(r) in flags]
+        if flagged:
+            print(f"\nProtocol deviations ({len(flagged)} record(s) flagged, kept above; SPEC.md, Protocol deviations)")
+            for r in flagged:
+                print(f"  {', '.join(flags[id(r)])}: {r['scenario']} {r['cell_id']} run {r['run_index']} "
+                      f"(seed {r['seed']}), outcome {r['outcome']}")
+            print("  Excluding flagged records, cells that change:")
+            excl = {(r["scenario"], r["cell_id"]): r for r in rows_excl if r["model"] == model}
+            for r in rows:
+                e = excl[(r["scenario"], r["cell_id"])]
+                if r["model"] == model and r["deviations"]:
+                    print(f"  {r['scenario']:3} {r['cell_id']:28} eligible {r['eligible']} -> {e['eligible']}, "
+                          f"revision {fmt(r['revision_rate'])} -> {fmt(e['revision_rate'])} "
+                          f"[{fmt(e['revision_ci_low'])},{fmt(e['revision_ci_high'])}], "
+                          f"initial acc. {fmt(r['initial_accuracy'])} -> {fmt(e['initial_accuracy'])}")
 
         print("\nChecks")
         for role in ("seer", "villager"):
