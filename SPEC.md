@@ -110,7 +110,7 @@ For the Seer, any final vote not on the Werewolf is an **evidence-inconsistent v
 - Elicited explanations.
 - Calibration levels 0-3 vs. 4.
 
-**Deviations.** Any change to texts, allocation or analysis after this date is recorded in this section, with its date and reason, before the affected runs. Deviations found during or after a run are logged under Protocol deviations.
+**Deviations.** Any change to texts, allocation or analysis after this date is recorded in this section, with its date and reason, before the affected runs. Deviations found during or after a run are logged under Protocol deviations, and changes to the analysis plan under Protocol amendments.
 
 ## Limitations (v3)
 
@@ -132,6 +132,12 @@ Each entry is also listed in `configs/deviations.yaml`. Run logs are never edite
 - **Scope:** 1 of 400 Luna runs, 1 of 2,000 calls. No other record has a fallback.
 - **Decision:** the record is kept; results are reported with and without it. Excluding it moves no pooled rate: villager-public-no_speaker eligible 100 to 99, revision 0.03 to 0.03.
 - **Fix (commit 6c6fcad), before any further runs:** only an error whose param or code field, or explicit parameter text, names the reasoning settings counts as an effort rejection; URLs are ignored. A usage-policy flag is retried as the same request with effort unchanged, up to the client's 5-retry limit, and if it still fails the run is logged as an error so resume runs it again. Effort is never dropped for a policy flag. No prompt text, tool schema or allocation changed; all prompt fingerprints are unchanged.
+
+## Protocol amendments
+
+Changes to the analysis plan after the preregistration, each dated and written before the analysis it affects.
+
+**A1 (2026-11-19, committee-requested, written before any inferential analysis of Study 1; descriptive summaries had been viewed):** Secondary analysis. ANOVA on cell-level revision rates. Unit: one scenario x model x role x visibility cell (10 games each, peers condition only; 120 cells). Factors: role, model, visibility, with scenario as a blocking factor; main effects only. Report F statistics, p-values, and Levene's test for equal variances. This analysis is secondary; the preregistered Firth logistic regression remains primary. Seer cells have zero variance by observation, which violates ANOVA assumptions; this is reported, not corrected.
 
 ---
 
