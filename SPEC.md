@@ -139,6 +139,17 @@ Changes to the analysis plan after the preregistration, each dated and written b
 
 **A1 (2026-11-19, committee-requested, written before any inferential analysis of Study 1; descriptive summaries had been viewed):** Secondary analysis. ANOVA on cell-level revision rates. Unit: one scenario x model x role x visibility cell (10 games each, peers condition only; 120 cells). Factors: role, model, visibility, with scenario as a blocking factor; main effects only. Report F statistics, p-values, and Levene's test for equal variances. This analysis is secondary; the preregistered Firth logistic regression remains primary. Seer cells have zero variance by observation, which violates ANOVA assumptions; this is reported, not corrected.
 
+**A2 (2026-11-19, owner, written after the data freeze and before any inferential analysis; descriptive summaries had been viewed).** Resolves points the preregistration and A1 left open. Nothing else in the analysis plan changes.
+1. **Inferential data.** The Firth models use the 1,200 main-design (peers) games only. The 200 speaker-free games stay exploratory, so deviation D1 (a speaker-free game) is not in the inferential data.
+2. **H1 outcome.** H1 is tested as the table specifies: the role coefficient on `revised` (`caved` only). The Seer's evidence-inconsistent rate (`caved` + `other`) is reported descriptively, as preregistered. **Added sensitivity analysis:** H1 refit with `caved` + `other` as the outcome; reported alongside, not part of the Holm family.
+3. **H3 model.** The visibility coefficient comes from the H2 model: Villager trials only, `revised ~ provider + provider:tier + visibility + scenario`.
+4. **Pairwise tier contrasts.** Differences in raw Villager revision rates (pooled over scenarios and visibilities) within each provider, 1 vs 2, 2 vs 3 and 1 vs 3, with Newcombe hybrid-score (Wilson-based) 95% intervals and no p-values.
+5. **Fit check excluding `other`.** Trials with outcome `other` are dropped and the H1 and H2/H3 models are refit; reported alongside, not used for decisions.
+6. **A1 Levene test.** One test per factor, mean-centered (classic Levene): role (2 groups of 60 cells), model (6 groups of 20), visibility (2 groups of 60).
+7. **Software.** Primary implementation: R with `logistf` (Firth-penalized logistic regression, profile penalized-likelihood intervals and penalized likelihood-ratio tests); `car::leveneTest` for A1. Cross-check only: Python `firthlogist` and a direct numpy fit of the same models. Discrepancies are reported, not resolved by choosing the more favorable fit. Package versions are recorded with the results.
+
+Holm correction stays across the four preregistered tests (H1, H2-OpenAI, H2-Anthropic, H3). Sensitivity analyses and fit checks are not corrected.
+
 ## Data freeze (2026-11-19)
 
 Study 1 data collection is complete. `runs/study1.jsonl` is frozen as of this entry, before any inferential analysis; the analysis reads this file only.
