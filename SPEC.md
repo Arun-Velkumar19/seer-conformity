@@ -139,6 +139,15 @@ Changes to the analysis plan after the preregistration, each dated and written b
 
 **A1 (2026-11-19, committee-requested, written before any inferential analysis of Study 1; descriptive summaries had been viewed):** Secondary analysis. ANOVA on cell-level revision rates. Unit: one scenario x model x role x visibility cell (10 games each, peers condition only; 120 cells). Factors: role, model, visibility, with scenario as a blocking factor; main effects only. Report F statistics, p-values, and Levene's test for equal variances. This analysis is secondary; the preregistered Firth logistic regression remains primary. Seer cells have zero variance by observation, which violates ANOVA assumptions; this is reported, not corrected.
 
+## Data freeze (2026-11-19)
+
+Study 1 data collection is complete. `runs/study1.jsonl` is frozen as of this entry, before any inferential analysis; the analysis reads this file only.
+
+- **SHA-256:** `f8d5c174361d0d3eb42e1d4fccb6646f58995c9ca8fd004e34be1f25a52b3313`
+- **Contents:** 1,400 records, matching the allocation: 1,200 main-design games (6 models × 200) and 200 speaker-free games (`gpt-6-luna`). 0 API errors, 0 duplicate run keys, 0 dry-run records, 0 excluded (initially incorrect) trials.
+- **Deviations:** D1 only (see Protocol deviations).
+- **Git tag:** `study1-data-complete`.
+
 ---
 
 # Part B: SPEC v2, feasibility spike and calibration (as run)
