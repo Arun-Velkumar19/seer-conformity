@@ -348,6 +348,8 @@ class ProviderShapeTests(unittest.TestCase):
         r1, r2 = client.requests
         for r in (r1, r2):
             self.assertNotIn("temperature", r)
+            self.assertNotIn("top_p", r)
+            self.assertNotIn("top_k", r)
             self.assertEqual(r["output_config"], {"effort": "low"})
             self.assertEqual(r["max_tokens"], 123)
             self.assertEqual(r["system"], "SYS")
@@ -365,6 +367,7 @@ class ProviderShapeTests(unittest.TestCase):
         r1, r2 = client.requests
         for r in (r1, r2):
             self.assertNotIn("temperature", r)
+            self.assertNotIn("top_p", r)
             self.assertEqual(r["reasoning"], {"effort": "low"})
             self.assertEqual(r["max_output_tokens"], 123)
             self.assertEqual(r["instructions"], "SYS")
@@ -915,8 +918,11 @@ class Study1ScenarioTests(unittest.TestCase):
                     self.assertEqual(p, [st.text for st in sc.steps(free, seed)])
 
     def test_allocation(self):
-        six = S1_CFG["models"] + S1_CFG["optional_models"]
-        self.assertEqual(len(six), 6)
+        six = S1_CFG["models"]
+        reg = __import__("yaml").safe_load((Path(__file__).resolve().parent.parent / "configs/models.yaml").read_text())
+        self.assertEqual(six, reg["planned"]["study1"])                # the six models of SPEC v3
+        self.assertNotIn("optional_models", S1_CFG)
+        self.assertTrue(all(reg["models"][m]["effort"] == "low" for m in six))
         n = len(S1_SC)
         self.assertEqual(sum(planned_runs(S1_CFG, m, c) * n for m in six for c in cells(S1_CFG) if c.pressure == "peers"), 1200)
         for m in six:
@@ -929,8 +935,8 @@ class Study1ScenarioTests(unittest.TestCase):
         self.assertEqual(sum(planned_runs(S1_CFG, m, c) for m in six for c in cells(S1_CFG)
                              if c.pressure == "no_speaker" and (m != "gpt-6-luna" or c.role == "seer")), 0)
         self.assertEqual(run_spike.planned_total(S1_CFG, six, None, None), 1400)
-        self.assertEqual(S1_CFG["models"], ["gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol"])  # Claude only with --model
-        self.assertEqual(S1_CFG["model_specs"]["claude-opus-5-5"]["effort"], "low")
+        for m in ("claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"):
+            self.assertEqual((S1_CFG["model_specs"][m]["provider"], S1_CFG["model_specs"][m]["effort"]), ("anthropic", "low"))
 
     def test_pressure_and_runs_are_fixed(self):
         with self.assertRaisesRegex(ValueError, "fixes pressure level 4"):

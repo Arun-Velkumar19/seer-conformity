@@ -19,7 +19,7 @@ The outcome is behavioral: a vote is a decision, not a belief. The original v2 q
 - **Study 1:** pressure level 4 (counterclaim plus Minion), 5 independently written scenarios, peers only. 6 models × 2 roles × 2 visibilities × 5 scenarios × 10 runs = 1,200 games, plus 200 speaker-free Villager games on `gpt-6-luna`. A dated preregistration is in [`SPEC.md`](SPEC.md).
 - **Before it (exploratory):** the feasibility spike (pressure level 0) and calibration (levels 1-4), kept as run.
 
-Models: the spike uses `gpt-6-luna`. Study 1 (SPEC v3) uses `gpt-6-luna`, `gpt-6.1-terra` and `gpt-6.1-sol`, plus `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5` once credits are in place (these run only with `--model`). Each model's provider and effort level are set in [`configs/models.yaml`](configs/models.yaml) and logged with every run.
+Models: the spike uses `gpt-6-luna`. Study 1 (SPEC v3) uses `gpt-6-luna`, `gpt-6.1-terra`, `gpt-6.1-sol`, `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5`; run them one at a time with `--model`. Each model's provider and effort level are set in [`configs/models.yaml`](configs/models.yaml) and logged with every run.
 
 ## Running
 

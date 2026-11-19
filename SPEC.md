@@ -46,7 +46,7 @@ For the Seer, any final vote not on the Werewolf is an **evidence-inconsistent v
   - **Argument ids** keep their calibration slot functions, such as `r1_timing` and `cc2_fits`.
   - **Review:** approved by owner (2026-10-30), with the speaker-free label "Unsigned message: " (`python scripts/review_scenarios.py` renders them).
 - **Main design, peers only.** 6 models × 2 roles × 2 visibilities (public, secret) × 5 scenarios × 10 runs = **1,200 games**, that is 100 games per role per model, balanced across scenarios.
-  - **Models:** `gpt-6-luna`, `gpt-6.1-terra` and `gpt-6.1-sol` run now. `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5` are config placeholders, with credits pending.
+  - **Models:** `gpt-6-luna`, `gpt-6.1-terra`, `gpt-6.1-sol`, `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5`, all at effort low (all six in `configs/study1.yaml` since 2026-11-19, when Anthropic credits were in place).
   - **Tiers within each provider:** 1 = Luna / Haiku, 2 = Terra / Sonnet, 3 = Sol / Opus.
   - **Seeds:** run i uses seed i in every cell and scenario, so public and secret are matched by seed.
 - **Speaker-free sensitivity analysis.** Villager only, `gpt-6-luna`, 5 scenarios × 20 runs per visibility: **100 public and 100 secret, 200 games**.

@@ -8,9 +8,9 @@
 name: study1
 
 model_registry: configs/models.yaml
-models: [gpt-6-luna, gpt-6.1-terra, gpt-6.1-sol]
-# Credits pending: these never run unless named with --model.
-optional_models: [claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5]
+# The six models of SPEC v3 (effort low, see models.yaml). Run them one at a
+# time with --model; with no --model every model below runs.
+models: [gpt-6-luna, gpt-6.1-terra, gpt-6.1-sol, claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5]
 
 pressure_levels: configs/pressure_levels.yaml
 pressure_level: 4
