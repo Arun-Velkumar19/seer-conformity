@@ -1,3 +1,9 @@
 anthropic>=2.3,<3
 openai>=3.41,<4
 pyyaml>=6
+
+# Study 1 analysis cross-check (SPEC v3, amendment A2); the primary analysis runs in R (logistf, car).
+numpy>=2
+scipy>=1.14
+statsmodels>=0.14
+firthlogist
